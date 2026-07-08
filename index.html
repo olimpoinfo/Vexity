@@ -1,0 +1,976 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script src="auth.js"></script>
+<script>authRequire();</script>
+<style>body{opacity:0;}</style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vexity Controle Contábil — Painel do Setor Contábil</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: var(--client-brand-color, #9fda68);
+    --accent-dim: rgba(var(--client-brand-rgb, 159, 218, 104), 0.12);
+    --blue: #4f6ef7;
+    --purple: #7c3aed;
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: radial-gradient(ellipse 1200px 600px at 50% -10%, #1a2030 0%, var(--bg) 55%);
+    color: var(--text);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* ================== FUNDO INTERATIVO ==================
+     Mesmo conceito da tela de login: grid com drift, brilho
+     que segue o cursor, orbes flutuantes e partículas subindo.
+     Aqui cobre a página inteira (fixed), atrás de todo o conteúdo. */
+  .bg-wrap {
+    position: fixed; inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .parallax-layer {
+    position: absolute; inset: -80px;
+    pointer-events: none;
+    transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
+    will-change: transform;
+  }
+  .bg-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(var(--client-brand-rgb, 159, 218, 104), 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(var(--client-brand-rgb, 159, 218, 104), 0.045) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(ellipse 900px 600px at 50% 0%, black, transparent 72%);
+    animation: gridDrift 22s linear infinite;
+  }
+  @keyframes gridDrift {
+    0%   { transform: translate(0, 0); }
+    100% { transform: translate(42px, 42px); }
+  }
+
+  .bg-spotlight {
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(circle 420px at var(--sx, 50%) var(--sy, 20%), rgba(var(--client-brand-rgb, 159, 218, 104), 0.08), transparent 62%);
+    opacity: 1;
+    transition: opacity 0.4s ease;
+  }
+
+  .orb-wrap { position: absolute; inset: 0; pointer-events: none; transition: transform 0.4s cubic-bezier(0.22,1,0.36,1); will-change: transform; }
+  .bg-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  .bg-orb.o1 {
+    width: 320px; height: 320px; left: -80px; top: 8%;
+    background: radial-gradient(circle, rgba(var(--client-brand-rgb, 159, 218, 104), 0.45), transparent 70%);
+    animation: floatA 15s ease-in-out infinite;
+  }
+  .bg-orb.o2 {
+    width: 380px; height: 380px; right: -110px; top: 40%;
+    background: radial-gradient(circle, rgba(79,110,247,0.4), transparent 70%);
+    animation: floatB 19s ease-in-out infinite;
+  }
+  .bg-orb.o3 {
+    width: 220px; height: 220px; left: 45%; bottom: -60px;
+    background: radial-gradient(circle, rgba(124,58,237,0.38), transparent 70%);
+    animation: floatC 17s ease-in-out infinite;
+  }
+  @keyframes floatA {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(35px, 45px) scale(1.1); }
+  }
+  @keyframes floatB {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-40px, -30px) scale(1.08); }
+  }
+  @keyframes floatC {
+    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.35; }
+    50% { transform: translate(-25px, -35px) scale(1.15); opacity: 0.55; }
+  }
+
+  .bg-particles {
+    position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+  }
+  .bg-particle {
+    position: absolute;
+    bottom: -10px;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0;
+    animation: particleRise linear infinite;
+  }
+  @keyframes particleRise {
+    0%   { transform: translateY(0) translateX(0); opacity: 0; }
+    8%   { opacity: 0.5; }
+    92%  { opacity: 0.3; }
+    100% { transform: translateY(-100vh) translateX(var(--drift, 20px)); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bg-grid, .bg-orb, .bg-particle, .parallax-layer, .orb-wrap { animation: none !important; transition: none !important; }
+  }
+
+  /* ================== CONTEÚDO (acima do fundo) ================== */
+  .page { position: relative; z-index: 1; }
+
+  .header {
+    height: 70px;
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(var(--client-brand-rgb, 159, 218, 104), 0.12);
+  }
+  .emag-top-title { text-align:left; line-height:1.15; }
+  .emag-top-title .emag {
+    font-size: 26px; font-weight: 800; color: var(--accent);
+    letter-spacing: 3px; text-shadow: 0 0 18px rgba(var(--client-brand-rgb, 159, 218, 104), 0.35);
+  }
+  .emag-top-title .contabilidade {
+    font-size: 10px; color: rgba(var(--client-brand-rgb, 159, 218, 104), 0.55);
+    letter-spacing: 3.5px; font-weight: 600; text-transform: uppercase;
+  }
+  .header-right {
+    text-align: right;
+    color: var(--text-muted);
+    font-size: 11px;
+    letter-spacing: 0.4px;
+  }
+  .header-right .date { color: var(--text-dim); font-weight: 600; font-size: 12px; }
+
+  .hero {
+    padding: 52px 40px 8px;
+    max-width: 1240px;
+    margin: 0 auto;
+  }
+  .hero-eyebrow {
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    width: 22px; height: 1px;
+    background: var(--accent);
+    display: inline-block;
+  }
+  .hero h1 {
+    font-size: 38px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    line-height: 1.15;
+    margin-bottom: 14px;
+    max-width: 720px;
+  }
+  .hero p {
+    color: var(--text-dim);
+    font-size: 15px;
+    max-width: 560px;
+    line-height: 1.6;
+  }
+
+  .modules {
+    max-width: 1240px;
+    margin: 40px auto 88px;
+    padding: 0 40px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    flex: 1;
+  }
+  .modules.role-panel { display: none; }
+  .modules.role-panel.active { display: grid; }
+  .role-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 16px; padding: 8px 12px; border-radius: 999px;
+    border: 1px solid rgba(var(--client-brand-rgb, 159, 218, 104), 0.22);
+    background: rgba(var(--client-brand-rgb, 159, 218, 104), 0.08);
+    color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: 0.3px;
+  }
+  .view-switch {
+    display: none;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .view-switch.active { display: flex; }
+  .view-switch button {
+    border: 1px solid rgba(var(--client-brand-rgb, 159, 218, 104), 0.24);
+    background: rgba(26,29,39,0.82);
+    color: var(--text-dim);
+    border-radius: 999px;
+    padding: 10px 14px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: border-color .2s, background .2s, color .2s, transform .2s;
+  }
+  .view-switch button:hover { transform: translateY(-1px); border-color: rgba(var(--client-brand-rgb, 159, 218, 104), 0.45); color: var(--text); }
+  .view-switch button.active {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-color: rgba(var(--client-brand-rgb, 159, 218, 104), 0.58);
+  }
+
+  .module-card {
+    position: relative;
+    background: linear-gradient(180deg, var(--surface) 0%, #171a24 100%);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 34px 30px 28px;
+    overflow: hidden;
+    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), border-color 0.3s, box-shadow 0.3s, background 0.3s;
+    display: flex;
+    flex-direction: column;
+    min-height: 460px;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+  }
+  button.module-card {
+    width: 100%;
+    text-align: left;
+    font: inherit;
+  }
+  .module-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--accent);
+    box-shadow: 0 20px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(var(--client-brand-rgb, 159, 218, 104), 0.18);
+  }
+
+  .module-index {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    margin-bottom: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .module-index .num-tag {
+    padding: 3px 9px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    color: var(--text-dim);
+  }
+
+  .module-icon-badge {
+    width: 62px; height: 62px;
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), border-color 0.3s;
+  }
+  .module-card:hover .module-icon-badge {
+    transform: scale(1.06) rotate(-3deg);
+    border-color: rgba(var(--client-brand-rgb, 159, 218, 104), 0.35);
+  }
+
+  .module-card h2 {
+    font-size: 21px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    letter-spacing: -0.2px;
+  }
+  .module-card p {
+    color: var(--text-dim);
+    font-size: 13.5px;
+    line-height: 1.65;
+    flex: 1;
+  }
+
+  .module-divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+    margin: 24px 0 20px;
+  }
+
+  .module-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+  .module-meta-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text-muted);
+  }
+  .module-meta-row .dot {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--text-muted); flex-shrink: 0;
+  }
+
+  .module-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .module-status {
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .status-ativo { background: var(--accent-dim); color: var(--accent); }
+
+  .module-arrow {
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity 0.25s, transform 0.25s;
+  }
+  .module-card:hover .module-arrow { opacity: 1; transform: translateX(0); }
+
+  .card-glow {
+    position: absolute;
+    top: -40%; right: -30%;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.16;
+    pointer-events: none;
+    transition: opacity 0.35s;
+  }
+  .module-card:hover .card-glow { opacity: 0.28; }
+  .glow-blue   { background: var(--blue); }
+  .glow-green  { background: var(--accent); }
+  .glow-purple { background: var(--purple); }
+
+  footer {
+    position: relative; z-index: 1;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 0 40px 40px;
+    letter-spacing: 0.3px;
+  }
+
+  @media (max-width: 980px) {
+    .modules { grid-template-columns: 1fr 1fr; }
+    .module-card { min-height: 400px; }
+  }
+  @media (max-width: 900px) {
+    .hero h1 { font-size: 28px; }
+    .header { padding: 0 20px; height: 64px; }
+    .hero { padding: 36px 20px 8px; }
+    .modules { padding: 0 20px; margin-top: 32px; }
+  }
+  @media (max-width: 620px) {
+    .hero h1 { font-size: 24px; }
+    .modules { grid-template-columns: 1fr; }
+    .module-card { min-height: auto; }
+  }
+  #client-picker-overlay{position:fixed;inset:0;z-index:8000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(3,7,18,.72);backdrop-filter:blur(8px);animation:cpFadeIn .18s ease-out}
+  #client-picker-overlay .cp-card{width:min(560px,100%);max-height:88vh;overflow:hidden;display:flex;flex-direction:column;background:linear-gradient(180deg,#1a1d27,#12141c);border:1px solid var(--border);border-radius:20px;box-shadow:0 40px 90px rgba(0,0,0,.55);color:var(--text)}
+  #client-picker-overlay .cp-head{display:flex;justify-content:space-between;gap:12px;padding:20px 22px 14px;border-bottom:1px solid var(--border)}
+  #client-picker-overlay .cp-eyebrow{color:var(--accent);font-size:11px;font-weight:900;letter-spacing:1.8px;text-transform:uppercase;margin-bottom:6px}
+  #client-picker-overlay .cp-head h3{font-size:18px;margin-bottom:6px;color:var(--text)}
+  #client-picker-overlay .cp-head p{color:var(--text-dim);font-size:12px;line-height:1.55;margin:0}
+  #client-picker-overlay .cp-close{background:transparent;color:var(--text-dim);border:1px solid var(--border);border-radius:10px;width:34px;height:34px;font-size:20px;cursor:pointer;flex-shrink:0;line-height:1}
+  #client-picker-overlay .cp-close:hover{color:#fff;border-color:rgba(255,255,255,.25)}
+  #client-picker-overlay .cp-search{margin:14px 22px 6px;width:calc(100% - 44px);background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px;outline:none;font:inherit;font-size:13px}
+  #client-picker-overlay .cp-search:focus{border-color:var(--accent)}
+  #client-picker-overlay .cp-list{overflow-y:auto;padding:8px 22px 22px;display:grid;gap:8px}
+  #client-picker-overlay .cp-item{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;text-align:left;padding:11px 12px;border:1px solid var(--border);background:rgba(255,255,255,.02);border-radius:12px;color:inherit;cursor:pointer;font:inherit;transition:border-color .15s,background .15s}
+  #client-picker-overlay .cp-item:hover{border-color:rgba(var(--client-brand-rgb, 159, 218, 104), .5);background:rgba(var(--client-brand-rgb, 159, 218, 104), .06)}
+  #client-picker-overlay .cp-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+  #client-picker-overlay .cp-body{display:flex;flex-direction:column;gap:2px;min-width:0}
+  #client-picker-overlay .cp-name{font-weight:900;font-size:13.5px}
+  #client-picker-overlay .cp-sub{color:var(--text-muted);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #client-picker-overlay .cp-arrow{color:var(--accent);font-weight:900;font-size:11.5px;white-space:nowrap}
+  #client-picker-overlay .cp-avatar{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-weight:900;font-size:12px;letter-spacing:.5px;border:1px solid transparent;flex-shrink:0}
+  #client-picker-overlay .cp-group{border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.015);padding:12px;display:flex;flex-direction:column;gap:8px}
+  #client-picker-overlay .cp-group-head{display:flex;align-items:center;gap:10px;padding:2px 4px 4px;border-bottom:1px dashed rgba(255,255,255,.06);margin-bottom:2px;padding-bottom:8px}
+  #client-picker-overlay .cp-group-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+  #client-picker-overlay .cp-group-info b{font-size:13.5px;font-weight:900;color:var(--text)}
+  #client-picker-overlay .cp-group-info small{font-size:11px;color:var(--text-muted)}
+  #client-picker-overlay .cp-group-list{display:flex;flex-direction:column;gap:6px}
+  #client-picker-overlay .cp-empty{padding:24px;text-align:center;color:var(--text-muted);border:1px dashed var(--border);border-radius:14px;line-height:1.55;font-size:12.5px}
+  @keyframes cpFadeIn{from{opacity:0}to{opacity:1}}
+
+  /* ---------- ajustes de modo claro ---------- */
+  html.emag-theme-light #client-picker-overlay .cp-card {
+    background: linear-gradient(180deg, var(--surface), var(--surface2)) !important;
+  }
+  html.emag-theme-light #client-picker-overlay .cp-close:hover {
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+  }
+  html.emag-theme-light #client-picker-overlay .cp-group {
+    background: rgba(15,23,42,0.025) !important;
+  }
+  html.emag-theme-light #client-picker-overlay .cp-group-head {
+    border-bottom-color: rgba(15,23,42,0.1) !important;
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-wrap" id="bg-wrap">
+  <div class="bg-spotlight" id="bg-spotlight"></div>
+  <div class="parallax-layer" id="layer-grid" style="--depth:0.01;">
+    <div class="bg-grid"></div>
+  </div>
+  <div class="orb-wrap" id="layer-o1" style="--depth:0.02;"><div class="bg-orb o1"></div></div>
+  <div class="orb-wrap" id="layer-o2" style="--depth:0.015;"><div class="bg-orb o2"></div></div>
+  <div class="orb-wrap" id="layer-o3" style="--depth:0.025;"><div class="bg-orb o3"></div></div>
+  <div class="bg-particles" id="bg-particles"></div>
+</div>
+
+<div class="page">
+
+<div class="header">
+  <div class="emag-top-title">
+    <div class="emag">VEXITY</div>
+    <div class="contabilidade">CONTROLE CONTÁBIL</div>
+  </div>
+  <div class="header-right">
+    <div class="date" id="today-label">—</div>
+    <div>Painel do Setor Contábil</div>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-eyebrow" id="dashboard-eyebrow">Setor Contábil</div>
+  <h1 id="dashboard-title">Central de processos contábeis</h1>
+  <p id="dashboard-subtitle">Selecione um módulo para acessar o controle e acompanhamento das rotinas do setor.</p>
+  <div class="role-pill" id="dashboard-role-pill">Perfil</div>
+</div>
+
+<div class="modules role-panel" id="admin-overview-modules">
+
+  <a href="admin-master.html" class="module-card">
+    <div class="card-glow glow-purple"></div>
+    <div class="module-index">
+      <span>MASTER</span>
+      <span class="num-tag">01</span>
+    </div>
+    <div class="module-icon-badge">AM</div>
+    <h2>Admin Master</h2>
+    <p>Mantenha o módulo atual para cadastrar clientes, liberar gerentes, controlar status e exportar a configuração do ambiente.</p>
+    <div class="module-divider"></div>
+    <div class="module-meta">
+      <div class="module-meta-row"><span class="dot"></span>Cadastro de clientes</div>
+      <div class="module-meta-row"><span class="dot"></span>Liberação de gerentes</div>
+    </div>
+    <div class="module-footer">
+      <span class="module-status status-ativo">● Master</span>
+      <span class="module-arrow">Acessar →</span>
+    </div>
+  </a>
+
+  <button type="button" class="module-card" onclick="setAdminPreview('manager')">
+    <div class="card-glow glow-blue"></div>
+    <div class="module-index">
+      <span>PRÉVIA</span>
+      <span class="num-tag">02</span>
+    </div>
+    <div class="module-icon-badge">VG</div>
+    <h2>Visão do Gerente</h2>
+    <p>Abra a mesma central usada pelo gerente para conferir carteira, portfólio e cadastro de operadores antes de entregar ao cliente.</p>
+    <div class="module-divider"></div>
+    <div class="module-meta">
+      <div class="module-meta-row"><span class="dot"></span>Gerenciar carteira</div>
+      <div class="module-meta-row"><span class="dot"></span>Operadores e empresas</div>
+    </div>
+    <div class="module-footer">
+      <span class="module-status status-ativo">● Auditoria</span>
+      <span class="module-arrow">Ver módulos →</span>
+    </div>
+  </button>
+
+  <button type="button" class="module-card" onclick="setAdminPreview('operator')">
+    <div class="card-glow glow-green"></div>
+    <div class="module-index">
+      <span>PRÉVIA</span>
+      <span class="num-tag">03</span>
+    </div>
+    <div class="module-icon-badge">VO</div>
+    <h2>Visão do Operador</h2>
+    <p>Confira os módulos operacionais como fechamento, movimento e portfólio para validar se a experiência final está correta.</p>
+    <div class="module-divider"></div>
+    <div class="module-meta">
+      <div class="module-meta-row"><span class="dot"></span>Fechamento e movimento</div>
+      <div class="module-meta-row"><span class="dot"></span>Portfólio filtrado por carteira</div>
+    </div>
+    <div class="module-footer">
+      <span class="module-status status-ativo">● Auditoria</span>
+      <span class="module-arrow">Ver módulos →</span>
+    </div>
+  </button>
+
+</div>
+
+<div class="modules role-panel" id="operator-modules">
+
+  <a href="fechamento-contabil.html" class="module-card">
+    <div class="card-glow glow-blue"></div>
+    <div class="module-index">
+      <span>MÓDULO</span>
+      <span class="num-tag">01</span>
+    </div>
+    <div class="module-icon-badge">🧮</div>
+    <h2>Fechamento Contábil</h2>
+    <p>Conferência, checklist mensal e acompanhamento das empresas designadas para sua carteira operacional.</p>
+    <div class="module-divider"></div>
+    <div class="module-meta">
+      <div class="module-meta-row"><span class="dot"></span>Rotina mensal por competência</div>
+      <div class="module-meta-row"><span class="dot"></span>Visão limitada à carteira atribuída</div>
+    </div>
+    <div class="module-footer">
+      <span class="module-status status-ativo">● Operação</span>
+      <span class="module-arrow">Acessar →</span>
+    </div>
+  </a>
+
+  <a href="movimento-contabil.html" class="module-card">
+    <div class="card-glow glow-green"></div>
+    <div class="module-index">
+      <span>MÓDULO</span>
+      <span class="num-tag">02</span>
+    </div>
+    <div class="module-icon-badge">📑</div>
+    <h2>Movimento Contábil</h2>
+    <p>Controle de envio e recebimento de documentos contábeis das empresas atribuídas pelo gerente.</p>
+    <div class="module-divider"></div>
+    <div class="module-meta">
+      <div class="module-meta-row"><span class="dot"></span>Envio e recebimento por mês</div>
+      <div class="module-meta-row"><span class="dot"></span>Status por regime tributário</div>
+    </div>
+    <div class="module-footer">
+      <span class="module-status status-ativo">● Operação</span>
+      <span class="module-arrow">Acessar →</span>
+    </div>
+  </a>
+
+  <a href="portfolio-contabil.html" class="module-card">
+    <div class="card-glow glow-purple"></div>
+    <div class="module-index">
+      <span>MÓDULO</span>
+      <span class="num-tag">03</span>
+    </div>
+    <div class="module-icon-badge">🗂️</div>
+    <h2>Portfólio Contábil</h2>
+    <p>Consulte somente as empresas designadas para sua carteira, acompanhe os dashboards e registre informações ou anexos.</p>
+    <div class="module-divider"></div>
+    <div class="module-meta">
+      <div class="module-meta-row"><span class="dot"></span>Carteira atribuída pelo gerente</div>
+      <div class="module-meta-row"><span class="dot"></span>Informações e arquivos da empresa</div>
+    </div>
+    <div class="module-footer">
+      <span class="module-status status-ativo">● Consulta</span>
+      <span class="module-arrow">Acessar →</span>
+    </div>
+  </a>
+
+</div>
+
+<div class="modules role-panel" id="manager-modules">
+
+  <a href="admin-master.html" class="module-card" id="admin-master-card" style="display:none;">
+    <div class="card-glow glow-purple"></div>
+    <div class="module-index">
+      <span>MASTER</span>
+      <span class="num-tag">00</span>
+    </div>
+    <div class="module-icon-badge">🔐</div>
+    <h2>Admin Master</h2>
+    <p>Cadastre clientes, libere usuários gerentes e defina configurações iniciais do site de cada cliente.</p>
+    <div class="module-divider"></div>
+    <div class="module-meta">
+      <div class="module-meta-row"><span class="dot"></span>Clientes e acessos gerenciais</div>
+      <div class="module-meta-row"><span class="dot"></span>Configuração inicial por cliente</div>
+    </div>
+    <div class="module-footer">
+      <span class="module-status status-ativo">● Administrador</span>
+      <span class="module-arrow">Acessar →</span>
+    </div>
+  </a>
+
+  <a href="gerenciar-carteira.html" class="module-card">
+    <div class="card-glow glow-blue"></div>
+    <div class="module-index">
+      <span>GERÊNCIA</span>
+      <span class="num-tag">01</span>
+    </div>
+    <div class="module-icon-badge">🧭</div>
+    <h2>Gerenciar Carteira</h2>
+    <p>Distribua empresas entre operadores e defina exatamente quais clientes cada funcionário poderá acompanhar.</p>
+    <div class="module-divider"></div>
+    <div class="module-meta">
+      <div class="module-meta-row"><span class="dot"></span>Designação por operador</div>
+      <div class="module-meta-row"><span class="dot"></span>Controle de acesso por carteira</div>
+    </div>
+    <div class="module-footer">
+      <span class="module-status status-ativo">● Gerência</span>
+      <span class="module-arrow">Acessar →</span>
+    </div>
+  </a>
+
+  <a href="portfolio-contabil.html" class="module-card">
+    <div class="card-glow glow-purple"></div>
+    <div class="module-index">
+      <span>GERÊNCIA</span>
+      <span class="num-tag">02</span>
+    </div>
+    <div class="module-icon-badge">🗂️</div>
+    <h2>Portfólio Contábil</h2>
+    <p>Cadastre, edite e acompanhe a base central de empresas, regimes tributários, dashboards e informações dos clientes.</p>
+    <div class="module-divider"></div>
+    <div class="module-meta">
+      <div class="module-meta-row"><span class="dot"></span>Base central do escritório</div>
+      <div class="module-meta-row"><span class="dot"></span>Cadastro, dashboards e manutenção</div>
+    </div>
+    <div class="module-footer">
+      <span class="module-status status-ativo">● Gerência</span>
+      <span class="module-arrow">Acessar →</span>
+    </div>
+  </a>
+
+  <a href="cadastro-operadores.html" class="module-card">
+    <div class="card-glow glow-green"></div>
+    <div class="module-index">
+      <span>GERÊNCIA</span>
+      <span class="num-tag">03</span>
+    </div>
+    <div class="module-icon-badge">👥</div>
+    <h2>Cadastro de Operadores</h2>
+    <p>Crie usuários operadores com nome, e-mail e senha inicial para acesso ao painel operacional.</p>
+    <div class="module-divider"></div>
+    <div class="module-meta">
+      <div class="module-meta-row"><span class="dot"></span>Cadastro controlado pelo gerente</div>
+      <div class="module-meta-row"><span class="dot"></span>Redefinição de senha inicial</div>
+    </div>
+    <div class="module-footer">
+      <span class="module-status status-ativo">● Gerência</span>
+      <span class="module-arrow">Acessar →</span>
+    </div>
+  </a>
+
+</div>
+
+</div>
+
+<footer>Vexity Controle Contábil · Painel interno do setor contábil</footer>
+
+<script>
+  const today = new Date();
+  const opts = { day: '2-digit', month: 'long', year: 'numeric' };
+  document.getElementById('today-label').textContent =
+    today.toLocaleDateString('pt-BR', opts).replace(/^\w/, c => c.toUpperCase());
+</script>
+
+<script>
+  // -------- fundo interativo: parallax + brilho seguindo o cursor (página inteira) --------
+  (function initBackground() {
+    const wrap = document.getElementById('bg-wrap');
+    if (!wrap) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const layers = Array.from(document.querySelectorAll('#bg-wrap .parallax-layer, #bg-wrap .orb-wrap'));
+    const spotlight = document.getElementById('bg-spotlight');
+
+    let rafId = null;
+    function apply(clientX, clientY) {
+      const w = window.innerWidth, h = window.innerHeight;
+      const cx = clientX - w / 2;
+      const cy = clientY - h / 2;
+
+      layers.forEach(layer => {
+        const depth = parseFloat(layer.style.getPropertyValue('--depth')) || 0.02;
+        const dx = -cx * depth;
+        const dy = -cy * depth;
+        layer.style.transform = `translate3d(${dx.toFixed(1)}px, ${dy.toFixed(1)}px, 0)`;
+      });
+
+      if (spotlight) {
+        spotlight.style.setProperty('--sx', (clientX / w * 100).toFixed(1) + '%');
+        spotlight.style.setProperty('--sy', (clientY / h * 100).toFixed(1) + '%');
+      }
+      rafId = null;
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      if (rafId) return;
+      const x = e.clientX, y = e.clientY;
+      rafId = requestAnimationFrame(() => apply(x, y));
+    });
+  })();
+
+  // Gera partículas flutuantes de fundo, dando "vida" à página
+  (function spawnParticles() {
+    const container = document.getElementById('bg-particles');
+    if (!container) return;
+    const COUNT = 30;
+    for (let i = 0; i < COUNT; i++) {
+      const p = document.createElement('div');
+      p.className = 'bg-particle';
+      const left = Math.random() * 100;
+      const size = 2.5 + Math.random() * 3.5;
+      const duration = 14 + Math.random() * 16;
+      const delay = Math.random() * -30;
+      const drift = (Math.random() * 60 - 30) + 'px';
+      p.style.left = left + '%';
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.setProperty('--drift', drift);
+      p.style.animationDuration = duration + 's';
+      p.style.animationDelay = delay + 's';
+      p.style.background = i % 3 === 0 ? '#4f6ef7' : (i % 3 === 1 ? '#9fda68' : '#7c3aed');
+      container.appendChild(p);
+    }
+  })();
+</script>
+
+<script>
+  /* Modal para o admin master escolher qual USUÁRIO (gerente ou operador) visualizar.
+     Cada cliente pode ter vários gerentes/operadores. Ao escolher, o preview role +
+     preview client são gravados e o index recarrega já no modo daquele cliente. */
+  function openClientPicker(role) {
+    const roleLabel = role === 'gerente' ? 'Gerente' : 'Operador';
+    const clients = (typeof authGetClients === 'function' ? authGetClients() : []).filter(c => c.status === 'ativo');
+    const clientById = {};
+    clients.forEach(c => { clientById[c.id] = c; });
+    const users = role === 'gerente'
+      ? (typeof authGetManagerUsers === 'function' ? authGetManagerUsers() : [])
+      : (typeof authGetOperatorUsers === 'function' ? authGetOperatorUsers() : []);
+    // Só usuários ativos e vinculados a um cliente ativo
+    const eligible = users
+      .filter(u => u.active !== false && u.clientId && clientById[u.clientId])
+      .map(u => ({ user: u, client: clientById[u.clientId] }));
+
+    let overlay = document.getElementById('client-picker-overlay');
+    if (overlay) overlay.remove();
+    overlay = document.createElement('div');
+    overlay.id = 'client-picker-overlay';
+    overlay.innerHTML = `
+      <div class="cp-card" role="dialog" aria-modal="true" aria-labelledby="cp-title">
+        <div class="cp-head">
+          <div>
+            <div class="cp-eyebrow">Visão do ${authEscape(roleLabel)}</div>
+            <h3 id="cp-title">Escolha o ${authEscape(roleLabel.toLowerCase())} para visualizar</h3>
+            <p>Você entrará no sistema como esse usuário, com a cor e o nome do cliente aplicados. Use o botão flutuante para sair.</p>
+          </div>
+          <button class="cp-close" type="button" aria-label="Fechar">×</button>
+        </div>
+        <input class="cp-search" id="cp-search" placeholder="Buscar por nome, e-mail ou cliente...">
+        <div class="cp-list" id="cp-list"></div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const listEl = overlay.querySelector('#cp-list');
+    const searchEl = overlay.querySelector('#cp-search');
+    const closeOverlay = () => { overlay.remove(); document.removeEventListener('keydown', onEsc); };
+    const onEsc = (e) => { if (e.key === 'Escape') closeOverlay(); };
+    const initials = (name) => String(name || '').trim().split(/\s+/).filter(Boolean).slice(0,2).map(w => w[0].toUpperCase()).join('') || '?';
+
+    const renderList = () => {
+      const q = searchEl.value.trim().toLowerCase();
+      const filtered = eligible.filter(({ user, client }) =>
+        !q || [user.nome, user.email, user.cargo, client.nome, client.siteTitle, client.id].join(' ').toLowerCase().includes(q)
+      );
+      if (!filtered.length) {
+        const emptyMsg = role === 'operador'
+          ? 'Nenhum operador cadastrado. Operadores são cadastrados pelo gerente através do módulo "Cadastro de Operadores".'
+          : 'Nenhum gerente ativo vinculado a um cliente. Cadastre um gerente no Admin Master antes de usar a visualização.';
+        listEl.innerHTML = `<div class="cp-empty">${authEscape(emptyMsg)}</div>`;
+        return;
+      }
+      // Agrupa por cliente
+      const grouped = {};
+      filtered.forEach(item => {
+        const cid = item.client.id;
+        if (!grouped[cid]) grouped[cid] = { client: item.client, users: [] };
+        grouped[cid].users.push(item.user);
+      });
+      listEl.innerHTML = Object.values(grouped).map(g => {
+        const cor = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(g.client.cor || '') ? g.client.cor : '#9fda68';
+        const usersHtml = g.users.map(u => `
+          <button type="button" class="cp-item" data-client="${authEscape(g.client.id)}" data-email="${authEscape(u.email || '')}">
+            <span class="cp-avatar" style="background:${cor}22;color:${cor};border-color:${cor}55">${authEscape(initials(u.nome))}</span>
+            <span class="cp-body">
+              <span class="cp-name">${authEscape(u.nome || u.email)}</span>
+              <span class="cp-sub">${authEscape(u.email)}${u.cargo ? ' · ' + authEscape(u.cargo) : ''}</span>
+            </span>
+            <span class="cp-arrow">Ver como ${authEscape(roleLabel)} →</span>
+          </button>
+        `).join('');
+        return `
+          <div class="cp-group">
+            <div class="cp-group-head">
+              <span class="cp-dot" style="background:${cor};box-shadow:0 0 14px ${cor}66"></span>
+              <div class="cp-group-info">
+                <b>${authEscape(g.client.nome)}</b>
+                <small>${authEscape(g.client.siteTitle || g.client.nome)} · ${g.users.length} ${authEscape(roleLabel.toLowerCase())}${g.users.length>1?'s':''}</small>
+              </div>
+            </div>
+            <div class="cp-group-list">${usersHtml}</div>
+          </div>
+        `;
+      }).join('');
+      listEl.querySelectorAll('.cp-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cid = btn.getAttribute('data-client');
+          const uemail = btn.getAttribute('data-email') || '';
+          authSetPreviewRole(role);
+          authSetPreviewClient(cid);
+          if (typeof authSetPreviewUser === 'function') authSetPreviewUser(uemail);
+          window.location.reload();
+        });
+      });
+    };
+    searchEl.addEventListener('input', renderList);
+    overlay.querySelector('.cp-close').addEventListener('click', closeOverlay);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) closeOverlay(); });
+    document.addEventListener('keydown', onEsc);
+    renderList();
+    setTimeout(() => searchEl.focus(), 50);
+  }
+
+  function setAdminPreview(view, opts) {
+    const session = authGetSession();
+    const isAdmin = typeof authIsAdmin === 'function' && authIsAdmin(session);
+    if (!isAdmin) return;
+
+    const next = ['admin', 'manager', 'operator'].includes(view) ? view : 'admin';
+    const skipPicker = opts && opts.skipPicker;
+    // Ao clicar em Visão do Gerente/Operador, abrir o seletor de cliente.
+    // A troca real de painel só acontece depois de o admin escolher um cliente
+    // (via openClientPicker) e o index recarregar com o preview client setado.
+    if (!skipPicker && (next === 'manager' || next === 'operator')) {
+      openClientPicker(next === 'manager' ? 'gerente' : 'operador');
+      return;
+    }
+    if (typeof authSetPreviewRole === 'function') authSetPreviewRole(next === 'manager' ? 'gerente' : (next === 'operator' ? 'operador' : ''));
+    // Se o admin voltar manualmente para "admin" pelo switch, limpa o preview do cliente
+    // (para não ficar preso a um cliente escolhido antes).
+    if (next === 'admin' && typeof authSetPreviewClient === 'function') authSetPreviewClient('');
+    if (next === 'admin' && typeof authSetPreviewUser === 'function') authSetPreviewUser('');
+    const panels = {
+      admin: document.getElementById('admin-overview-modules'),
+      manager: document.getElementById('manager-modules'),
+      operator: document.getElementById('operator-modules')
+    };
+    Object.entries(panels).forEach(([key, panel]) => {
+      if (panel) panel.classList.toggle('active', key === next);
+    });
+    document.querySelectorAll('[data-admin-view-btn]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.adminViewBtn === next);
+    });
+
+    const adminCard = document.getElementById('admin-master-card');
+    if (adminCard) adminCard.style.display = 'none';
+
+    const copy = {
+      admin: {
+        eyebrow: 'Área do Administrador',
+        title: 'Central master do aplicativo',
+        subtitle: 'Escolha entre o Admin Master, a prévia do gerente e a prévia do operador para auditar o sistema antes de liberar aos clientes.',
+        pill: 'Perfil: Administrador Master'
+      },
+      manager: {
+        eyebrow: 'Prévia do Gerente',
+        title: 'Módulos visíveis para gerentes',
+        subtitle: 'Acesse os módulos gerenciais com seu usuário master para validar carteira, operadores e portfólio como o gerente verá.',
+        pill: 'Visualizando: Gerente'
+      },
+      operator: {
+        eyebrow: 'Prévia do Operador',
+        title: 'Módulos visíveis para operadores',
+        subtitle: 'Confira fechamento, movimento e portfólio operacional para analisar se os módulos do cliente estão corretos.',
+        pill: 'Visualizando: Operador'
+      }
+    }[next];
+
+    document.getElementById('dashboard-eyebrow').textContent = copy.eyebrow;
+    document.getElementById('dashboard-title').textContent = copy.title;
+    document.getElementById('dashboard-subtitle').textContent = copy.subtitle;
+    document.getElementById('dashboard-role-pill').textContent = copy.pill;
+  }
+
+  (function setupDashboardByRole() {
+    const session = authGetSession();
+    const isAdmin = typeof authIsAdmin === 'function' && authIsAdmin(session);
+    const isManager = typeof authIsManager === 'function' ? authIsManager(session) : (session && session.role === 'gerente');
+    const operatorModules = document.getElementById('operator-modules');
+    const managerModules = document.getElementById('manager-modules');
+    const adminOverview = document.getElementById('admin-overview-modules');
+    const adminSwitch = document.getElementById('admin-view-switch');
+
+    if (isAdmin) {
+      if (adminSwitch) adminSwitch.classList.add('active');
+      // Se o admin escolheu um cliente via "Visão do Gerente/Operador",
+      // já entra direto no painel do cliente com o preview ativo.
+      const previewRole = typeof authGetPreviewRole === 'function' ? authGetPreviewRole() : '';
+      const previewClient = typeof authGetPreviewClient === 'function' ? authGetPreviewClient() : '';
+      if (previewClient && previewRole === 'gerente') {
+        setAdminPreview('manager', { skipPicker: true });
+      } else if (previewClient && previewRole === 'operador') {
+        setAdminPreview('operator', { skipPicker: true });
+      } else {
+        setAdminPreview('admin');
+      }
+      return;
+    }
+
+    if (adminOverview) adminOverview.classList.remove('active');
+    if (adminSwitch) adminSwitch.classList.remove('active');
+    operatorModules.classList.toggle('active', !isManager);
+    managerModules.classList.toggle('active', !!isManager);
+    const adminCard = document.getElementById('admin-master-card');
+    if (adminCard) adminCard.style.display = 'none';
+    document.getElementById('dashboard-eyebrow').textContent = isManager ? 'Área do Gerente' : 'Área do Operador';
+    document.getElementById('dashboard-title').textContent = isManager ? 'Central de gerenciamento contábil' : 'Central de processos contábeis';
+    document.getElementById('dashboard-subtitle').textContent = isManager
+        ? 'Gerencie operadores, empresas e carteiras de trabalho do setor.'
+        : 'Acesse as rotinas operacionais e o portfólio das empresas atribuídas à sua carteira.';
+    document.getElementById('dashboard-role-pill').textContent = isManager ? 'Perfil: Gerente' : 'Perfil: Operador';
+  })();
+  authMountBadge({ showName: true });
+  authFadeIn();
+</script>
+</body>
+</html>

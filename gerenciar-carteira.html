@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script src="auth.js"></script>
+<script>authRequireRole('gerente');</script>
+<style>body{opacity:0;}</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerenciar Carteira — Vexity Controle Contábil</title>
+<style>
+  :root {
+    --bg:#0f1117; --surface:#1a1d27; --surface2:#22263a; --surface3:#161923;
+    --border:#2e3350; --accent:#7c3aed; --lime:var(--client-brand-color, #9fda68); --blue:#4f6ef7;
+    --green:#22c55e; --yellow:#f59e0b; --red:#ef4444;
+    --text:#e2e8f0; --text-dim:#94a3b8; --text-muted:#64748b; --radius:14px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:14px; }
+  body::before { content:''; position:fixed; inset:0; pointer-events:none; z-index:-1; background:radial-gradient(ellipse 900px 520px at 50% -20%, rgba(124,58,237,.22), transparent 62%), radial-gradient(ellipse 760px 420px at 12% 12%, rgba(79,110,247,.12), transparent 58%), radial-gradient(ellipse 680px 380px at 90% 4%, rgba(var(--client-brand-rgb, 159, 218, 104),.10), transparent 58%); }
+  .header { background:linear-gradient(135deg,#12152a 0%,#1a1d2e 60%,#12152a 100%); border-bottom:2px solid rgba(124,58,237,.25); padding:0 32px; height:70px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 2px 24px rgba(0,0,0,.35); gap:12px; }
+  .back-to-menu { display:flex; align-items:center; gap:10px; text-decoration:none; flex-shrink:0; padding:6px 10px 6px 6px; border-radius:10px; transition:background .2s, transform .2s; }
+  .back-to-menu:hover { background:rgba(var(--client-brand-rgb, 159, 218, 104),.08); transform:translateX(-2px); }
+  .back-to-menu span { color:var(--lime); font-size:16px; }
+  .emag-top-title { text-align:left; line-height:1.15; white-space:nowrap; }
+  .emag-top-title .emag { font-size:26px; font-weight:800; color:var(--lime); letter-spacing:3px; text-shadow:0 0 18px rgba(var(--client-brand-rgb, 159, 218, 104),.35); }
+  .emag-top-title .contabilidade { font-size:10px; color:rgba(var(--client-brand-rgb, 159, 218, 104),.55); letter-spacing:3.5px; font-weight:600; text-transform:uppercase; }
+  .header-center { text-align:center; flex:1; min-width:0; padding:0 16px; border-left:1px solid rgba(255,255,255,.07); border-right:1px solid rgba(255,255,255,.07); }
+  .header-center h1 { font-size:15px; font-weight:700; color:#e8eaf6; letter-spacing:.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .header-center p { margin:3px 0 0; color:rgba(255,255,255,.38); font-size:10px; letter-spacing:.4px; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .btn-new { background:var(--accent); color:#fff; border:none; border-radius:8px; padding:9px 16px; font-size:13px; font-weight:800; cursor:pointer; flex-shrink:0; transition:opacity .2s, transform .2s; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
+  .btn-new:hover { opacity:.9; transform:translateY(-1px); }
+  .page { width:min(1220px, calc(100% - 42px)); margin:28px auto 60px; }
+  .hero { display:flex; align-items:flex-end; justify-content:space-between; gap:18px; margin-bottom:18px; }
+  .eyebrow { color:var(--lime); font-size:12px; text-transform:uppercase; letter-spacing:1.8px; font-weight:900; margin-bottom:10px; }
+  h1.page-title { font-size:32px; line-height:1.1; letter-spacing:-.7px; }
+  .hero p { color:var(--text-dim); margin-top:10px; line-height:1.55; max-width:760px; }
+  .pill { border:1px solid rgba(var(--client-brand-rgb, 159, 218, 104),.22); background:rgba(var(--client-brand-rgb, 159, 218, 104),.08); color:var(--lime); padding:9px 12px; border-radius:999px; font-size:12px; font-weight:900; white-space:nowrap; }
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px; }
+  .stat { background:linear-gradient(180deg,var(--surface),#171a24); border:1px solid var(--border); border-radius:var(--radius); padding:16px; box-shadow:0 14px 32px rgba(0,0,0,.18); }
+  .stat b { display:block; font-size:28px; line-height:1; margin-bottom:6px; color:var(--text); }
+  .stat span { color:var(--text-muted); font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.5px; }
+  .layout { display:grid; grid-template-columns: 360px 1fr; gap:18px; align-items:start; }
+  .card { background:linear-gradient(180deg,var(--surface),#171a24); border:1px solid var(--border); border-radius:18px; padding:18px; box-shadow:0 18px 45px rgba(0,0,0,.22); }
+  .card-title { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+  .card h2 { font-size:17px; letter-spacing:-.2px; }
+  .muted { color:var(--text-muted); font-size:12px; line-height:1.5; }
+  .field { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+  label { color:var(--text-dim); font-size:12px; font-weight:800; }
+  input, select, textarea { width:100%; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:11px; padding:11px 12px; outline:none; font:inherit; font-size:13px; }
+  textarea { min-height:78px; resize:vertical; }
+  input:focus, select:focus, textarea:focus { border-color:var(--lime); box-shadow:0 0 0 3px rgba(var(--client-brand-rgb, 159, 218, 104),.08); }
+  input:disabled { opacity:.68; cursor:not-allowed; }
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .actions { display:flex; gap:9px; flex-wrap:wrap; align-items:center; }
+  .btn { border:0; border-radius:11px; padding:10px 13px; font-weight:900; cursor:pointer; font-size:12.5px; background:var(--lime); color:#10151d; transition:filter .2s, transform .15s; }
+  .btn:hover { filter:brightness(1.08); transform:translateY(-1px); }
+  .btn.secondary { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+  .btn.danger { background:rgba(239,68,68,.12); color:#fca5a5; border:1px solid rgba(239,68,68,.28); }
+  .btn.ghost { background:transparent; color:var(--text-dim); border:1px solid var(--border); }
+  .banner { display:none; margin:0 0 12px; padding:10px 12px; border-radius:11px; font-size:12.5px; font-weight:800; }
+  .banner.show { display:block; }
+  .banner.success { color:var(--lime); background:rgba(var(--client-brand-rgb, 159, 218, 104),.1); border:1px solid rgba(var(--client-brand-rgb, 159, 218, 104),.22); }
+  .banner.error { color:#fca5a5; background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.22); }
+  .toolbar { display:grid; grid-template-columns:1fr 160px 150px; gap:10px; margin-bottom:14px; }
+  .empty { border:1px dashed var(--border); border-radius:14px; padding:22px; text-align:center; color:var(--text-muted); background:rgba(255,255,255,.025); }
+  .status { display:inline-flex; align-items:center; gap:6px; padding:5px 9px; border-radius:999px; font-size:11px; font-weight:900; border:1px solid rgba(34,197,94,.28); background:rgba(34,197,94,.10); color:#86efac; }
+  .status.off { border-color:rgba(239,68,68,.30); background:rgba(239,68,68,.10); color:#fca5a5; }
+  .tag { display:inline-flex; align-items:center; padding:5px 8px; border-radius:999px; font-size:11px; font-weight:900; color:#c4b5fd; background:rgba(124,58,237,.14); border:1px solid rgba(167,139,250,.42); }
+  .footer { text-align:center; padding:20px; color:var(--text-muted); font-size:11px; border-top:1px solid var(--border); }
+  .modal-backdrop { position:fixed; inset:0; background:rgba(3,6,12,.72); backdrop-filter:blur(7px); display:none; align-items:center; justify-content:center; padding:18px; z-index:500; }
+  .modal-backdrop.open { display:flex; }
+  .modal { width:min(430px,100%); background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:18px; box-shadow:0 24px 80px rgba(0,0,0,.48); }
+  .modal h3 { margin-bottom:8px; font-size:18px; }
+  .modal p { margin-bottom:14px; }
+  @media (max-width: 960px) { .layout { grid-template-columns:1fr; } .toolbar { grid-template-columns:1fr; } .stats { grid-template-columns:1fr; } .grid-2 { grid-template-columns:1fr; } .hero { align-items:flex-start; flex-direction:column; } }
+  @media (max-width: 620px) { .page { width:min(100% - 24px,1220px); margin-top:18px; } .header { padding:0 14px; height:62px; gap:8px; } .header-center { display:none; } .emag-top-title .emag { font-size:20px; letter-spacing:2px; } .emag-top-title .contabilidade { font-size:9px; letter-spacing:2px; } .btn-new { padding:8px 12px; font-size:12px; } h1.page-title { font-size:26px; } }
+</style>
+
+<style>
+  .operator-summary { border:1px solid rgba(var(--client-brand-rgb, 159, 218, 104),.18); background:rgba(var(--client-brand-rgb, 159, 218, 104),.055); border-radius:14px; padding:13px; margin:4px 0 14px; }
+  .operator-summary b { display:block; margin-bottom:5px; color:var(--text); }
+  .operator-summary span { display:block; color:var(--text-muted); font-size:12px; line-height:1.45; }
+  .company-list { display:flex; flex-direction:column; gap:8px; max-height:620px; overflow:auto; padding-right:3px; }
+  .company-row { display:grid; grid-template-columns:auto 1fr auto; gap:11px; align-items:center; padding:12px; border:1px solid var(--border); border-radius:13px; background:rgba(255,255,255,.018); transition:border-color .2s, background .2s; }
+  .company-row:hover { border-color:rgba(var(--client-brand-rgb, 159, 218, 104),.24); background:rgba(255,255,255,.035); }
+  .company-row.selected { border-color:rgba(var(--client-brand-rgb, 159, 218, 104),.38); background:rgba(var(--client-brand-rgb, 159, 218, 104),.07); }
+  .company-row.inactive { opacity:.68; }
+  .company-row input { width:17px; height:17px; accent-color:var(--lime); }
+  .company-name { color:var(--text); font-weight:800; line-height:1.25; }
+  .company-meta { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+  .mini { display:inline-flex; padding:4px 7px; border-radius:999px; background:rgba(255,255,255,.05); border:1px solid var(--border); color:var(--text-muted); font-size:10px; font-weight:900; }
+  .mini.warn { color:#fcd34d; border-color:rgba(245,158,11,.34); background:rgba(245,158,11,.10); }
+  .mini.off { color:#fca5a5; border-color:rgba(239,68,68,.30); background:rgba(239,68,68,.10); }
+  .side-note { margin-top:13px; padding-top:13px; border-top:1px solid var(--border); }
+
+  /* ---------- ajustes de modo claro ---------- */
+  html.emag-theme-light .stat {
+    background: var(--surface) !important;
+  }
+  html.emag-theme-light .company-row {
+    background: rgba(15,23,42,0.02) !important;
+  }
+  html.emag-theme-light .company-row:hover {
+    background: rgba(15,23,42,0.045) !important;
+  }
+  html.emag-theme-light .mini {
+    background: rgba(15,23,42,0.04) !important;
+  }
+</style>
+</head>
+<body>
+<header class="header">
+  <a href="index.html" class="back-to-menu" title="Voltar ao Menu Principal">
+    <span>←</span>
+    <div class="emag-top-title">
+      <div class="emag">VEXITY</div>
+      <div class="contabilidade">CONTROLE CONTÁBIL</div>
+    </div>
+  </a>
+  <div class="header-center">
+    <h1>Gerenciar Carteira <span style="color:#a78bfa;">2026</span></h1>
+    <p>Distribuição de empresas por operador</p>
+  </div>
+  <a href="portfolio-contabil.html" class="btn-new">Abrir Portfólio</a>
+</header>
+<main class="page">
+  <section class="hero">
+    <div>
+      <div class="eyebrow">Gerência</div>
+      <h1 class="page-title">Carteira por operador</h1>
+      <p>Escolha um operador, marque as empresas permitidas e salve. Esta seleção define o que ele verá no Portfólio, Movimento e Fechamento.</p>
+    </div>
+    <div class="pill" id="assigned-count">0 selecionadas</div>
+  </section>
+
+  <section class="stats" aria-label="Resumo da carteira">
+    <div class="stat"><b id="stat-companies">0</b><span>Empresas no portfólio</span></div>
+    <div class="stat"><b id="stat-selected">0</b><span>Na carteira atual</span></div>
+    <div class="stat"><b id="stat-unassigned">0</b><span>Sem operador</span></div>
+  </section>
+
+  <section class="layout">
+    <aside class="card">
+      <div class="card-title"><h2>1. Operador</h2></div>
+      <div class="banner" id="side-banner"></div>
+      <div class="field">
+        <label for="operator-select">Selecionar operador</label>
+        <select id="operator-select" onchange="loadSelectedOperator()"></select>
+      </div>
+      <div class="operator-summary" id="operator-summary">
+        <b>Nenhum operador selecionado</b>
+        <span>Cadastre operadores para distribuir a carteira.</span>
+      </div>
+      <div class="actions">
+        <button class="btn secondary" type="button" onclick="selectVisibleCompanies(false)">Marcar visíveis</button>
+        <button class="btn secondary" type="button" onclick="selectVisibleCompanies(true)">Só ativas</button>
+        <button class="btn danger" type="button" onclick="clearSelection()">Limpar</button>
+      </div>
+      <div class="side-note muted">Operador sem empresa atribuída verá os módulos sem carteira e, no Portfólio, o minigame.</div>
+    </aside>
+
+    <section class="card">
+      <div class="card-title">
+        <h2>2. Empresas permitidas</h2>
+        <button class="btn" onclick="saveAssignments()">Salvar carteira</button>
+      </div>
+      <div class="banner" id="main-banner"></div>
+      <div class="toolbar">
+        <input id="search" placeholder="Buscar por nome, ID ou regime" oninput="renderCompanies()">
+        <select id="regime-filter" onchange="renderCompanies()">
+          <option value="">Todos os regimes</option>
+          <option value="Simples Nacional">Simples Nacional</option>
+          <option value="Lucro Presumido">Lucro Presumido</option>
+          <option value="Lucro Real">Lucro Real</option>
+        </select>
+        <select id="scope-filter" onchange="renderCompanies()">
+          <option value="">Todas</option>
+          <option value="selected">Marcadas</option>
+          <option value="unselected">Não marcadas</option>
+          <option value="unassigned">Sem operador</option>
+        </select>
+      </div>
+      <div class="company-list" id="company-list"></div>
+    </section>
+  </section>
+</main>
+<div class="footer">Vexity Controle Contábil · Gerenciamento de carteira operacional</div>
+<script>
+const COMPANY_KEY = 'portfolio_contabil_empresas_v1';
+let companies = [];
+let selected = new Set();
+function showBanner(id, msg, type) { const el=document.getElementById(id); el.textContent=msg; el.className='banner show '+(type||'success'); }
+function readCompanies() {
+  let all = [];
+  try { all = JSON.parse(localStorage.getItem(COMPANY_KEY)) || []; } catch(e) { all = []; }
+  if (!Array.isArray(all)) all = [];
+  // Restringe ao cliente (escritório) do gerente logado — antes disso a
+  // carteira mostrava empresas de TODOS os clientes cadastrados no sistema.
+  return typeof authFilterCompaniesForSession === 'function' ? authFilterCompaniesForSession(all) : all;
+}
+function currentOperator() { return document.getElementById('operator-select').value; }
+function allAssignments() { return typeof authGetAllAssignments === 'function' ? authGetAllAssignments() : {}; }
+function updateStats() {
+  companies = readCompanies();
+  const assignedSet = new Set();
+  Object.values(allAssignments()).forEach(ids => Array.isArray(ids) && ids.forEach(id => assignedSet.add(String(id))));
+  document.getElementById('stat-companies').textContent = companies.length;
+  document.getElementById('stat-selected').textContent = selected.size;
+  document.getElementById('stat-unassigned').textContent = companies.filter(c => !assignedSet.has(String(c.id))).length;
+  document.getElementById('assigned-count').textContent = selected.size + (selected.size === 1 ? ' selecionada' : ' selecionadas');
+}
+function renderOperators() {
+  const operators = typeof authGetOperatorUsersForSession === 'function' ? authGetOperatorUsersForSession() : authGetOperatorUsers();
+  const select = document.getElementById('operator-select');
+  if (!operators.length) {
+    select.innerHTML = '<option value="">Nenhum operador cadastrado</option>';
+    document.getElementById('company-list').innerHTML = '<div class="empty">Cadastre operadores antes de montar carteiras.</div>';
+    updateStats();
+    return;
+  }
+  select.innerHTML = operators.map(op => `<option value="${authEscape(op.email)}">${authEscape(op.nome)}${op.active === false ? ' — inativo' : ''}</option>`).join('');
+  loadSelectedOperator();
+}
+function loadSelectedOperator() {
+  const email = currentOperator();
+  selected = new Set(authGetAssignedCompanyIds(email));
+  const op = authFindUser(email);
+  const box = document.getElementById('operator-summary');
+  if (op) {
+    box.innerHTML = `<b>${authEscape(op.nome)}</b><span>${authEscape(op.email)}</span><span>${authEscape(op.cargo || 'Cargo não informado')} · ${op.active === false ? 'inativo' : 'ativo'}</span>`;
+  }
+  renderCompanies();
+}
+function companyIsAssignedToSomeone(id) {
+  return Object.values(allAssignments()).some(ids => Array.isArray(ids) && ids.map(String).includes(String(id)));
+}
+function getFilteredCompanies() {
+  companies = readCompanies().sort((a,b) => String(a.nome||'').localeCompare(String(b.nome||''), 'pt-BR', { sensitivity:'base' }));
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  const regime = document.getElementById('regime-filter').value;
+  const scope = document.getElementById('scope-filter').value;
+  return companies.filter(c => {
+    const id = String(c.id || '');
+    if (q && !String(c.nome||'').toLowerCase().includes(q) && !id.toLowerCase().includes(q) && !String(c.regime||'').toLowerCase().includes(q)) return false;
+    if (regime && c.regime !== regime) return false;
+    if (scope === 'selected' && !selected.has(id)) return false;
+    if (scope === 'unselected' && selected.has(id)) return false;
+    if (scope === 'unassigned' && companyIsAssignedToSomeone(id)) return false;
+    return true;
+  });
+}
+function renderCompanies() {
+  const list = document.getElementById('company-list');
+  const filtered = getFilteredCompanies();
+  updateStats();
+  if (!companies.length) { list.innerHTML = '<div class="empty">Nenhuma empresa no Portfólio Contábil.</div>'; return; }
+  if (!filtered.length) { list.innerHTML = '<div class="empty">Nenhuma empresa corresponde aos filtros.</div>'; return; }
+  list.innerHTML = filtered.map(c => {
+    const id = String(c.id || '');
+    const checked = selected.has(id);
+    const inactive = !!c.closeDate;
+    return `<label class="company-row ${checked ? 'selected' : ''} ${inactive ? 'inactive' : ''}">
+      <input type="checkbox" data-id="${authEscape(id)}" ${checked ? 'checked' : ''} onchange="toggleCompany(this.dataset.id, this.checked)">
+      <span><span class="company-name">${authEscape(c.nome || 'Sem nome')}</span><span class="company-meta"><span class="mini">#${authEscape(id)}</span><span class="mini">${authEscape(c.regime || 'Sem regime')}</span>${inactive ? '<span class="mini off">Inativa</span>' : '<span class="mini">Ativa</span>'}${companyIsAssignedToSomeone(id) && !checked ? '<span class="mini warn">Já atribuída</span>' : ''}</span></span>
+      <span class="tag">${checked ? 'Incluída' : 'Fora'}</span>
+    </label>`;
+  }).join('');
+}
+function toggleCompany(id, checked) { checked ? selected.add(String(id)) : selected.delete(String(id)); renderCompanies(); }
+function selectVisibleCompanies(activeOnly) { getFilteredCompanies().filter(c => !activeOnly || !c.closeDate).forEach(c => selected.add(String(c.id))); renderCompanies(); }
+function clearSelection() { selected.clear(); renderCompanies(); }
+function saveAssignments() {
+  if (!currentOperator()) return showBanner('main-banner', 'Selecione um operador.', 'error');
+  const validIds = new Set(readCompanies().map(c => String(c.id)));
+  const clean = Array.from(selected).filter(id => validIds.has(String(id)));
+  const res = authSetAssignedCompanyIds(currentOperator(), clean);
+  if (!res.ok) return showBanner('main-banner', res.msg, 'error');
+  selected = new Set(clean);
+  const op = authFindUser(currentOperator());
+  showBanner('main-banner', `Carteira salva com ${clean.length} empresa(s).`, 'success');
+  if (typeof authShowChangeConfirmation === 'function') {
+    authShowChangeConfirmation({
+      title: 'Carteira salva',
+      message: 'A distribuição de empresas do operador foi atualizada.',
+      detail: `${op ? op.nome : currentOperator()}
+${currentOperator()}
+Empresas atribuídas: ${clean.length}`
+    });
+  }
+  renderCompanies();
+}
+renderOperators(); authMountBadge(); authFadeIn();
+</script>
+</body>
+</html>

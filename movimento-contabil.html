@@ -1,0 +1,1930 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script src="auth.js"></script>
+<script src="celebration.js"></script>
+<script src="minigame.js"></script>
+<script>authRequireRole('operador');</script>
+<style>body{opacity:0;}</style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movimento Contábil — Vexity Controle Contábil</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: #4f6ef7;
+    --accent2: #7c3aed;
+    --green: #22c55e;
+    --green-dim: #16a34a22;
+    --yellow: #f59e0b;
+    --yellow-dim: #f59e0b22;
+    --red: #ef4444;
+    --red-dim: #ef444422;
+    --blue: #3b82f6;
+    --blue-dim: #3b82f622;
+    --gray: #64748b;
+    --gray-dim: #64748b22;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #12152a 0%, #1a1d2e 60%, #12152a 100%);
+    border-bottom: 2px solid rgba(var(--client-brand-rgb, 159, 218, 104),0.18);
+    padding: 0 32px;
+    height: 70px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 24px rgba(0,0,0,0.35);
+    gap: 12px;
+  }
+  .header-center {
+    text-align: center;
+    flex: 1;
+    min-width: 0;
+    padding: 0 16px;
+    border-left: 1px solid rgba(255,255,255,0.07);
+    border-right: 1px solid rgba(255,255,255,0.07);
+  }
+  .header-center h1 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #e8eaf6;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .header-center p {
+    margin: 3px 0 0 0;
+    color: rgba(255,255,255,0.38);
+    font-size: 10px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* Botão hambúrguer (só aparece no mobile) */
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    flex-shrink: 0;
+  }
+  .hamburger span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: #e8eaf6;
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+  /* Menu mobile de abas */
+  .mobile-nav-menu {
+    display: none;
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    background: #1a1d2e;
+    border-bottom: 2px solid rgba(var(--client-brand-rgb, 159, 218, 104),0.18);
+    flex-direction: column;
+    z-index: 99;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .mobile-nav-menu.open { display: flex; }
+  .mobile-nav-item {
+    padding: 14px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: background 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .mobile-nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+  html.emag-theme-light .mobile-nav-item:hover { background: rgba(15,23,42,0.05) !important; color: var(--text) !important; }
+  .mobile-nav-item.active { color: var(--client-brand-color, #9fda68); background: rgba(var(--client-brand-rgb, 159, 218, 104),0.07); }
+  
+  .nav-tabs {
+    display: flex;
+    gap: 10px;
+  }
+  .nav-tab {
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-dim);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .nav-tab:hover {
+    background: var(--border);
+    color: var(--text);
+    transform: translateY(-2px);
+  }
+  .nav-tab:active {
+    transform: translateY(0);
+  }
+  .nav-tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  /* MAIN */
+  .main { padding: 28px 32px; max-width: 1440px; margin: 0 auto; position: relative; }
+  .view-content {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.38s ease, transform 0.38s ease;
+    pointer-events: none;
+    position: absolute;
+    visibility: hidden;
+    width: 100%;
+  }
+  .view-content.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    position: relative;
+    visibility: visible;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: fadeIn 0.4s ease forwards; }
+
+  /* Ring SVG transition suave */
+  #ring-progress {
+    transition: stroke-dashoffset 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* CARDS */
+  .cards-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    border-color: var(--accent);
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .card.blue::before { background: var(--blue); }
+  .card.green::before { background: var(--green); }
+  .card.yellow::before { background: var(--yellow); }
+  .card.purple::before { background: var(--accent2); }
+  .card.gray::before { background: var(--gray); }
+  .card-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .card-value {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .card.blue .card-value { color: var(--blue); }
+  .card.green .card-value { color: var(--green); }
+  .card.yellow .card-value { color: var(--yellow); }
+  .card.purple .card-value { color: var(--accent2); }
+  .card.gray .card-value { color: var(--gray); }
+  .card-label { color: var(--text-dim); font-size: 13px; font-weight: 500; }
+  .card-sub { color: var(--text-muted); font-size: 11px; margin-top: 4px; }
+
+  /* SECTION TITLES */
+  .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title span { color: var(--text-muted); font-weight: 400; font-size: 13px; }
+
+  /* LAYOUTS */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  .three-col { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+
+  /* CHART WRAPPER */
+  .chart-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  /* BAR CHART */
+  .bar-chart { display: flex; gap: 12px; align-items: flex-end; height: 140px; padding-top: 10px; }
+  .bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar-wrap { width: 100%; display: flex; gap: 3px; align-items: flex-end; height: 120px; }
+  .bar {
+    flex: 1;
+    border-radius: 4px 4px 0 0;
+    transition: opacity 0.2s;
+    cursor: default;
+    min-height: 2px;
+    position: relative;
+  }
+  .bar:hover { opacity: 0.8; }
+  .bar-ok { background: var(--green); }
+  .bar-pendente { background: var(--red); }
+  .bar-label { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
+  .chart-legend { display: flex; gap: 14px; margin-top: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-dim); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* REGIME CHART */
+  .regime-list { display: flex; flex-direction: column; gap: 14px; }
+  .regime-item { display: flex; flex-direction: column; gap: 5px; }
+  .regime-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
+  .regime-name { font-size: 12px; color: var(--text-dim); }
+  .regime-count { font-size: 12px; font-weight: 600; color: var(--text); }
+  .regime-bar-bg { background: var(--surface2); border-radius: 4px; height: 8px; overflow: hidden; }
+  .regime-bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+
+  /* MONTH SELECTOR */
+  .month-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .month-tab {
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .month-tab:hover { border-color: var(--accent); color: var(--text); }
+  .month-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* TABLE */
+  .table-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .table-header {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .table-controls { display: flex; gap: 10px; align-items: center; }
+  .search-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 7px 12px;
+    font-size: 13px;
+    outline: none;
+    width: 220px;
+    transition: border-color 0.15s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .filter-select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 7px 10px;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+  }
+  .table-scroll { overflow-x: auto; max-height: 500px; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: var(--surface2); position: sticky; top: 0; z-index: 2; }
+  th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+  }
+  th:hover { background: rgba(255,255,255,0.05); }
+  th.sort-asc::after { content: ' ↑'; color: var(--accent); }
+  th.sort-desc::after { content: ' ↓'; color: var(--accent); }
+  th.center { text-align: center; }
+  td {
+    padding: 9px 14px;
+    font-size: 12px;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td.nome { color: var(--text); font-weight: 500; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+  tr:hover td { background: var(--surface2); }
+  
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-ok { background: var(--green-dim); color: var(--green); border: 1px solid #22c55e33; }
+  .badge-sm { background: var(--blue-dim); color: var(--blue); border: 1px solid #3b82f633; }
+  .badge-pendente { background: var(--red-dim); color: #f87171; border: 1px solid #ef444433; }
+  .badge-extra { background: var(--yellow-dim); color: var(--yellow); border: 1px solid #f59e0b33; }
+  .badge-drive { background: #a855f722; color: #a855f7; border: 1px solid #a855f733; }
+  .badge-na { background: var(--gray-dim); color: var(--gray); border: 1px solid #64748b33; }
+  td.center { text-align: center; }
+
+  /* MINI HEATMAP */
+  .mini-months { display: flex; gap: 2px; }
+  .mini-cell { width: 14px; height: 14px; border-radius: 2px; }
+  .mini-ok { background: var(--green); }
+  .mini-sm { background: var(--blue); }
+  .mini-pendente { background: var(--surface2); border: 1px solid var(--border); }
+  .mini-extra { background: var(--yellow); }
+  .mini-drive { background: #a855f7; }
+  .mini-na { background: transparent; border: 1px dashed var(--border); opacity: 0.5; }
+
+  /* MINIGAME STYLES */
+  #minigame-container {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 46px 20px 52px;
+    background:
+      radial-gradient(circle at 50% 20%, rgba(var(--client-brand-rgb, 159, 218, 104),0.10), transparent 38%),
+      linear-gradient(180deg, #111827 0%, #0b0f16 100%);
+    border-radius: 0 0 var(--radius) var(--radius);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    min-height: 410px;
+  }
+  #minigame-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(var(--client-brand-rgb, 159, 218, 104),0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(var(--client-brand-rgb, 159, 218, 104),0.05) 1px, transparent 1px);
+    background-size: 36px 36px;
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent 75%);
+    pointer-events: none;
+  }
+  #game-canvas {
+    position: relative;
+    z-index: 1;
+    width: min(760px, 100%);
+    height: auto;
+    background: #0c111b;
+    border: 1px solid rgba(var(--client-brand-rgb, 159, 218, 104), 0.28);
+    border-radius: 16px;
+    max-width: 100%;
+    cursor: pointer;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.38), 0 0 34px rgba(var(--client-brand-rgb, 159, 218, 104), 0.12);
+  }
+  html.emag-theme-light #game-canvas {
+    background: #f1f5f9;
+    border-color: rgba(var(--client-brand-rgb, 159, 218, 104), 0.4);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.1), 0 0 20px rgba(var(--client-brand-rgb, 159, 218, 104), 0.08);
+  }
+  .game-hint {
+    position: relative;
+    z-index: 1;
+    margin-top: 16px;
+    color: rgba(226,232,240,0.72);
+    font-size: 13px;
+    letter-spacing: 0.2px;
+  }
+  html.emag-theme-light .game-hint {
+    color: rgba(226,232,240,0.72);
+  }
+  #minigame-container .section-title {
+    color: #e2e8f0 !important;
+  }
+  .game-over-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    background: rgba(8,12,20,0.88);
+    backdrop-filter: blur(10px);
+    padding: 22px;
+    border-radius: 16px;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid rgba(var(--client-brand-rgb, 159, 218, 104), 0.45);
+    box-shadow: 0 18px 60px rgba(0,0,0,0.42), 0 0 32px rgba(var(--client-brand-rgb, 159, 218, 104), 0.16);
+  }
+  html.emag-theme-light .game-over-overlay {
+    background: rgba(255,255,255,0.92);
+    border-color: rgba(var(--client-brand-rgb, 159, 218, 104), 0.5);
+    box-shadow: 0 18px 60px rgba(0,0,0,0.12), 0 0 32px rgba(var(--client-brand-rgb, 159, 218, 104), 0.1);
+  }
+  .game-over-overlay h3 { color: var(--client-brand-color, #bef264); margin: 0; letter-spacing: 1.6px; }
+  .game-over-overlay p { margin: 0; font-weight: 800; font-size: 18px; color: var(--text); }
+  .btn-restart {
+    background: var(--client-brand-color, #9fda68);
+    color: #0b1118;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 900;
+    box-shadow: 0 0 22px rgba(var(--client-brand-rgb, 159, 218, 104),0.28);
+  }
+
+  /* STATUS SUMMARY */
+  .status-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  @media (max-width: 540px) { .status-cards { grid-template-columns: 1fr; } }
+  .status-card { border-radius: 10px; padding: 14px 16px; border: 1px solid transparent; }
+  .status-card.ok { background: var(--green-dim); border-color: #22c55e33; }
+  .status-card.pendente { background: var(--red-dim); border-color: #ef444433; }
+  .status-card.sm { background: var(--blue-dim); border-color: #3b82f633; }
+  .status-card-val { font-size: 28px; font-weight: 800; }
+  .status-card.ok .status-card-val { color: var(--green); }
+  .status-card.pendente .status-card-val { color: #f87171; }
+  .status-card.sm .status-card-val { color: var(--blue); }
+  .status-card-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* PROGRESS RING */
+  .progress-ring-wrap { display: flex; align-items: center; gap: 20px; }
+  .monthly-summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: center;
+  }
+  .summary-divider {
+    width: 1px;
+    height: 80px;
+    background: var(--border);
+    margin: 0 auto;
+  }
+  .highlight-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .highlight-val {
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .highlight-label {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    font-weight: 600;
+  }
+  .ring-svg { transform: rotate(-90deg); }
+  .ring-pct { font-size: 32px; font-weight: 800; color: var(--green); }
+  .ring-sub { color: var(--text-muted); font-size: 12px; }
+
+  /* EDIT VIEW STYLES */
+  .edit-form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    max-width: 100%;
+    margin: 0 auto;
+    position: relative;
+  }
+  .form-group { margin-bottom: 20px; position: relative; }
+  .edit-result-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .edit-result-item:last-child { border-bottom: none; }
+  .edit-result-item:hover { background: rgba(79,110,247,0.12); }
+  .edit-result-id {
+    font-weight: 800;
+    color: var(--accent);
+    min-width: 46px;
+    font-size: 13px;
+  }
+  .edit-result-name { color: var(--text); font-weight: 500; }
+  .edit-result-regime { color: var(--text-muted); font-size: 11px; margin-left: auto; }
+  .form-label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-dim); }
+  .form-control {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 10px 14px;
+    font-size: 14px;
+    outline: none;
+  }
+  .form-control:focus { border-color: var(--accent); }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  
+  .btn-save, .btn-add, .btn-delete, .btn-reactivate {
+    background: var(--green);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+  .btn-save:hover, .btn-add:hover, .btn-reactivate:hover { 
+    opacity: 0.9; 
+    transform: scale(1.02);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  }
+  .btn-save:active, .btn-add:active, .btn-reactivate:active {
+    transform: scale(0.98);
+  }
+  .btn-delete {
+    background: var(--red);
+  }
+  .btn-delete:hover { opacity: 0.9; }
+  .btn-reactivate {
+    background: var(--blue);
+  }
+  
+  .btn-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  /* COMPANY MANAGEMENT TABLE */
+  .company-list {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  
+  .company-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr auto;
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+  }
+  
+  .company-item:last-child {
+    border-bottom: none;
+  }
+  
+  .company-item:hover {
+    background: var(--surface2);
+  }
+  
+  .company-name {
+    font-weight: 600;
+    color: var(--text);
+  }
+  
+  .company-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  
+  .company-status.active {
+    background: var(--green-dim);
+    color: var(--green);
+  }
+  
+  .company-status.inactive {
+    background: var(--red-dim);
+    color: var(--red);
+  }
+  
+  .company-date {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  
+  .company-actions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: opacity 0.2s;
+  }
+  
+  .btn-small-delete {
+    background: var(--red-dim);
+    color: var(--red);
+    border: 1px solid var(--red);
+  }
+  
+  .btn-small-delete:hover {
+    opacity: 0.9;
+  }
+  
+  .btn-small-reactivate {
+    background: var(--blue-dim);
+    color: var(--blue);
+    border: 1px solid var(--blue);
+  }
+  
+  .btn-small-reactivate:hover {
+    opacity: 0.9;
+  }
+  
+  /* FOOTER */
+  .footer { text-align: center; padding: 20px; color: var(--text-muted); font-size: 11px; border-top: 1px solid var(--border); }
+
+  @media (max-width: 900px) {
+    .cards-row { grid-template-columns: repeat(2, 1fr); }
+    .two-col, .three-col { grid-template-columns: 1fr; }
+    .main { padding: 16px; }
+    .form-row { grid-template-columns: 1fr; }
+    .company-item { grid-template-columns: 1fr; }
+  }
+  /* === RESPONSIVO: TABLET === */
+  @media (max-width: 860px) {
+    .header { padding: 0 20px; height: 64px; }
+    .header-center { padding: 0 10px; }
+    .header-center h1 { font-size: 13px; }
+    .header-center p { display: none; }
+    .nav-tabs { gap: 6px; }
+    .nav-tab { padding: 7px 11px; font-size: 12px; gap: 4px; }
+  }
+  /* === RESPONSIVO: MOBILE === */
+  @media (max-width: 620px) {
+    .header { padding: 0 16px; height: 60px; }
+    .header-center { display: none; }
+    .nav-tabs { display: none; }
+    .hamburger { display: flex; }
+    .emag-top-title .emag { font-size: 20px; letter-spacing: 2px; }
+    .emag-top-title .contabilidade { font-size: 8px; letter-spacing: 2.5px; }
+    .main { padding: 12px; }
+    .cards-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+    #minigame-container { padding: 24px 10px 30px; min-height: 320px; }
+    .game-hint { font-size: 11px; padding: 0 8px; }
+    td { padding: 8px 10px; font-size: 11px; }
+    th { padding: 8px 10px; font-size: 10px; }
+  }
+  @media (max-width: 400px) {
+    .cards-row { grid-template-columns: 1fr; }
+    .emag-top-title .emag { font-size: 18px; letter-spacing: 1px; }
+  }
+
+  /* EDIT TABLE STYLES */
+  .edit-table-cell {
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+    position: relative;
+  }
+  .edit-table-cell:hover {
+    filter: brightness(1.2);
+    transform: scale(1.1);
+  }
+  .edit-table-cell:active {
+    transform: scale(0.95);
+  }
+  .edit-table-cell.inapto {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .edit-table-cell.inapto:hover {
+    transform: none;
+    filter: none;
+  }
+.back-to-menu{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  text-decoration:none;
+  flex-shrink:0;
+  padding:6px 10px 6px 6px;
+  border-radius:10px;
+  transition: background 0.2s, transform 0.2s;
+}
+.back-to-menu:hover{
+  background: rgba(var(--client-brand-rgb, 159, 218, 104),0.08);
+  transform: translateX(-2px);
+}
+.back-to-menu span{
+  color:var(--client-brand-color, #9fda68);
+}
+.emag-top-title{
+  text-align:left;
+  line-height:1.15;
+  white-space: nowrap;
+}
+.emag-top-title .emag{
+  font-size:26px;
+  font-weight:800;
+  color:var(--client-brand-color, #9fda68);
+  letter-spacing:3px;
+  text-shadow: 0 0 18px rgba(var(--client-brand-rgb, 159, 218, 104),0.35);
+}
+.emag-top-title .contabilidade{
+  font-size:10px;
+  color:rgba(var(--client-brand-rgb, 159, 218, 104),0.55);
+  letter-spacing:3.5px;
+  font-weight:600;
+  text-transform:uppercase;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back-to-menu" title="Voltar ao Menu Principal">
+    <span style="font-size:16px;">←</span>
+    <div class="emag-top-title" style="margin:0; text-align:left; flex-shrink:0;">
+      <div class="emag">VEXITY</div>
+      <div class="contabilidade">CONTROLE CONTÁBIL</div>
+    </div>
+  </a>
+  <div class="header-center">
+    <h1>Movimentos Contábeis <span style="color:var(--client-brand-color, #9fda68);">2026</span></h1>
+    <p>Controle dinâmico · Planilha Oficial</p>
+  </div>
+  <div class="nav-tabs" id="desktop-nav">
+    <div class="nav-tab active" onclick="switchView('geral')">🏢 Visão Geral</div>
+    <div class="nav-tab" onclick="switchView('mensal')">📅 Visão Mensal</div>
+    <div class="nav-tab" onclick="switchView('edit')">✏️ Editar Dados</div>
+  </div>
+  <div class="hamburger" id="hamburger-btn" onclick="toggleMobileMenu()">
+    <span></span><span></span><span></span>
+  </div>
+</div>
+
+<!-- Menu mobile -->
+<div class="mobile-nav-menu" id="mobile-nav">
+  <div class="mobile-nav-item active" onclick="switchView('geral'); closeMobileMenu()">🏢 Visão Geral</div>
+  <div class="mobile-nav-item" onclick="switchView('mensal'); closeMobileMenu()">📅 Visão Mensal</div>
+  <div class="mobile-nav-item" onclick="switchView('edit'); closeMobileMenu()">✏️ Editar Dados</div>
+</div>
+
+<div class="main">
+  <!-- VIEW GERAL -->
+  <div id="view-geral" class="view-content active">
+    <div class="cards-row">
+      <div class="card blue">
+        <span class="card-icon">🏢</span>
+        <div class="card-value" id="geral-total">0</div>
+        <div class="card-label">Total de Empresas</div>
+        <div class="card-sub" id="geral-total-sub">Ativas no mês atual</div>
+      </div>
+      <div class="card green">
+        <span class="card-icon">✅</span>
+        <div class="card-value" id="geral-envios-confirmados">0</div>
+        <div class="card-label">Envios Confirmados</div>
+        <div class="card-sub">Enviaram ao menos 1 mês</div>
+      </div>
+      <div class="card purple">
+        <span class="card-icon">📭</span>
+        <div class="card-value" id="geral-sm">0</div>
+        <div class="card-label">Sem Movimento (S/M)</div>
+        <div class="card-sub">Empresas sem documentos</div>
+      </div>
+      <div class="card yellow">
+        <span class="card-icon">⏳</span>
+        <div class="card-value" id="geral-pendentes-zero">0</div>
+        <div class="card-label">Empresas Pendentes</div>
+        <div class="card-sub">Nenhum envio no ano</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="chart-box">
+        <div class="section-title">📊 Distribuição por Regime Tributário</div>
+        <div class="regime-list" id="geral-regime-list"></div>
+      </div>
+      <div class="chart-box">
+        <div class="section-title">📈 Evolução de Envios (Ano Completo)</div>
+        <div class="bar-chart" id="geral-bar-chart"></div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>OK</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Pendente</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-box">
+      <div class="table-header" id="geral-table-header">
+        <div class="section-title" style="margin:0">🏢 Histórico Completo <span id="geral-table-count"></span></div>
+        <div class="table-controls" id="geral-table-controls">
+          <input type="text" class="search-input" placeholder="🔍 Buscar empresa..." id="geral-search" oninput="filterGeralTable()">
+          <select class="filter-select" id="geral-regime" onchange="filterGeralTable()">
+            <option value="">Todos os regimes</option>
+            <option value="Simples Nacional">Simples Nacional</option>
+            <option value="Lucro Presumido">Lucro Presumido</option>
+            <option value="Lucro Real">Lucro Real</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-scroll" id="geral-table-scroll">
+        <table>
+          <thead>
+              <tr>
+                <th width="60" onclick="sortTable('geral', 'id')">ID</th>
+                <th onclick="sortTable('geral', 'nome')">Razão Social</th>
+                <th onclick="sortTable('geral', 'regime')">Regime</th>
+                <th class="center">Resumo do Ano</th>
+                <th class="center" onclick="sortTable('geral', 'okCount')">Envios</th>
+              </tr>
+          </thead>
+          <tbody id="geral-table-body"></tbody>
+        </table>
+      </div>
+
+      <!-- MINIGAME -->
+      <div id="minigame-container">
+        <div class="section-title" style="justify-content: center; margin-bottom: 20px; position:relative; z-index:1;">🎮 Sem empresas ativas — aqueça os reflexos</div>
+        <canvas id="game-canvas" width="760" height="280"></canvas>
+        <div class="game-hint">Pressione <b>ESPAÇO</b>, <b>↑</b> ou <b>CLIQUE</b> para pular. Colete <b>$</b> por +10 pontos e desvie dos spikes. Suba degraus e não caia nos buracos!</div>
+        <div id="game-over" class="game-over-overlay">
+          <h3>TRY AGAIN</h3>
+          <p id="game-score">Pontuação: 0</p>
+          <button class="btn-restart" onclick="resetGame()">Jogar Novamente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW MENSAL -->
+  <div id="view-mensal" class="view-content">
+    <div class="status-cards">
+      <div class="status-card ok">
+        <div class="status-card-val" id="month-ok">0</div>
+        <div class="status-card-label">✅ Confirmados</div>
+      </div>
+      <div class="status-card sm">
+        <div class="status-card-val" id="month-sm">0</div>
+        <div class="status-card-label">📭 Sem Movimento</div>
+      </div>
+      <div class="status-card pendente">
+        <div class="status-card-val" id="month-pendente">0</div>
+        <div class="status-card-label">⏳ Pendentes</div>
+      </div>
+    </div>
+
+    <div class="chart-box" style="margin-bottom:24px">
+      <div class="monthly-summary-grid">
+        <div class="highlight-card">
+          <div class="section-title" style="margin-bottom: 15px;">📊 Taxa de Envio</div>
+          <div class="progress-ring-wrap">
+            <svg class="ring-svg" width="100" height="100" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="var(--surface2)" stroke-width="8"/>
+              <circle id="ring-progress" cx="60" cy="60" r="50" fill="none" stroke="var(--green)" stroke-width="8" stroke-dasharray="314" stroke-dashoffset="314" stroke-linecap="round"/>
+            </svg>
+            <div style="text-align: left;">
+              <div class="ring-pct" id="ring-pct" style="font-size: 28px;">0%</div>
+              <div class="ring-sub" id="ring-label">Taxa de envio</div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <div class="summary-divider"></div>
+          <div class="highlight-card" style="flex: 1;">
+            <div class="section-title" style="margin-bottom: 15px;">🏢 Empresas no Período</div>
+            <div class="highlight-val" id="monthly-total-companies">0</div>
+            <div class="highlight-label">Empresas Ativas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="month-tabs" id="month-tabs"></div>
+
+    <div class="table-box">
+      <div class="table-header">
+        <div class="section-title" style="margin:0">📋 Empresas no Mês <span id="mensal-table-count"></span></div>
+        <div class="table-controls">
+          <input type="text" class="search-input" placeholder="🔍 Buscar empresa..." id="mensal-search" oninput="filterMensalTable()">
+          <select class="filter-select" id="mensal-status" onchange="filterMensalTable()">
+            <option value="">Todos os status</option>
+            <option value="ok">✅ OK</option>
+            <option value="sm">📭 Sem Movimento</option>
+            <option value="pendente">⏳ Pendente</option>
+            <option value="na">⚪ N/A</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th width="60" onclick="sortTable('mensal', 'id')">ID</th>
+              <th onclick="sortTable('mensal', 'nome')">Razão Social</th>
+              <th class="center" onclick="sortTable('mensal', 'status')">Status no Mês</th>
+            </tr>
+          </thead>
+          <tbody id="mensal-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW EDIT -->
+  <div id="view-edit" class="view-content">
+    <div class="edit-form" style="max-width: 100%; margin-bottom: 24px;">
+      <div class="section-title">✏️ Atualizar Movimento (Individual)</div>
+
+      <!-- Busca por ID ou Nome -->
+      <div class="form-group">
+        <label class="form-label">Buscar por ID ou Nome da Empresa</label>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input type="text" id="edit-search-input" class="form-control"
+            placeholder="Digite o ID (ex: 134) ou parte do nome..."
+            oninput="filterEditCompanyOptions()"
+            style="flex:1;">
+          <button class="btn-save" style="white-space:nowrap;padding:10px 16px;" onclick="clearEditSearch()">✖ Limpar</button>
+        </div>
+        <!-- Lista dropdown de resultados -->
+        <div id="edit-search-results" style="
+          display:none;
+          position:absolute;
+          z-index:200;
+          background:var(--surface2);
+          border:1px solid var(--accent);
+          border-radius:8px;
+          max-height:220px;
+          overflow-y:auto;
+          width:calc(100% - 48px);
+          margin-top:4px;
+          box-shadow:0 8px 24px rgba(0,0,0,0.4);
+        "></div>
+      </div>
+
+      <!-- Card da empresa selecionada -->
+      <div id="edit-company-card" style="display:none; background:var(--surface2); border:1px solid var(--accent); border-radius:10px; padding:14px 18px; margin-bottom:18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px;">Empresa Selecionada</div>
+            <div id="edit-company-card-name" style="font-size:15px;font-weight:700;color:var(--text);">—</div>
+            <div id="edit-company-card-info" style="font-size:11px;color:var(--text-muted);margin-top:3px;">—</div>
+          </div>
+          <div id="edit-company-card-id" style="font-size:28px;font-weight:800;color:var(--accent);letter-spacing:-1px;">#—</div>
+        </div>
+      </div>
+
+      <!-- Campo hidden para armazenar o ID selecionado -->
+      <input type="hidden" id="edit-company" value="">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Mês de Referência</label>
+          <select id="edit-month" class="form-control" onchange="updateEditForm()">
+            <option value="JAN">Janeiro</option>
+            <option value="FEV">Fevereiro</option>
+            <option value="MAR">Março</option>
+            <option value="ABR">Abril</option>
+            <option value="MAI">Maio</option>
+            <option value="JUN">Junho</option>
+            <option value="JUL">Julho</option>
+            <option value="AGO">Agosto</option>
+            <option value="SET">Setembro</option>
+            <option value="OUT">Outubro</option>
+            <option value="NOV">Novembro</option>
+            <option value="DEZ">Dezembro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Novo Status</label>
+          <select id="edit-status" class="form-control">
+            <option value="PENDENTE">⏳ PENDENTE</option>
+            <option value="OK">✅ OK (Movimento Recebido)</option>
+            <option value="OK (S/M)">📭 OK (Sem Movimento)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Status atual do mês selecionado -->
+      <div id="edit-current-status-wrap" style="display:none; margin-bottom:16px; padding:10px 14px; background:var(--surface2); border-radius:8px; border:1px solid var(--border); font-size:13px;">
+        <span style="color:var(--text-muted);">Status atual neste mês: </span>
+        <span id="edit-current-status-val" style="font-weight:700;color:var(--text);"></span>
+      </div>
+
+      <button class="btn-save" onclick="saveEdit()">💾 Salvar Alteração</button>
+      <div id="edit-msg" style="margin-top: 15px; font-weight: 600;"></div>
+    </div>
+
+    <div class="edit-form" style="max-width: 100%; margin-bottom: 24px;">
+      <div class="section-title">⚡ Atualização Rápida (Clique na Tabela)</div>
+      <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 13px;">
+        Clique nos quadrados coloridos da tabela abaixo para alternar rapidamente entre os status: 
+        <span style="color: var(--red); font-weight: bold;">Pendente</span> → 
+        <span style="color: var(--green); font-weight: bold;">OK</span> → 
+        <span style="color: var(--blue); font-weight: bold;">S/M</span>.
+      </p>
+      
+      <div class="table-box">
+        <div class="table-header">
+          <div class="section-title" style="margin:0">📋 Tabela de Edição Direta</div>
+          <div class="table-controls">
+            <input type="text" class="search-input" placeholder="🔍 Filtrar empresa..." id="edit-table-search" oninput="renderEditTable()">
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th width="60" onclick="sortTable('edit', 'id')">ID</th>
+                <th onclick="sortTable('edit', 'nome')">Razão Social</th>
+                <th class="center" onclick="sortTable('edit', 'JAN')">JAN</th>
+                <th class="center" onclick="sortTable('edit', 'FEV')">FEV</th>
+                <th class="center" onclick="sortTable('edit', 'MAR')">MAR</th>
+                <th class="center" onclick="sortTable('edit', 'ABR')">ABR</th>
+                <th class="center" onclick="sortTable('edit', 'MAI')">MAI</th>
+                <th class="center" onclick="sortTable('edit', 'JUN')">JUN</th>
+                <th class="center" onclick="sortTable('edit', 'JUL')">JUL</th>
+                <th class="center" onclick="sortTable('edit', 'AGO')">AGO</th>
+                <th class="center" onclick="sortTable('edit', 'SET')">SET</th>
+                <th class="center" onclick="sortTable('edit', 'OUT')">OUT</th>
+                <th class="center" onclick="sortTable('edit', 'NOV')">NOV</th>
+                <th class="center" onclick="sortTable('edit', 'DEZ')">DEZ</th>
+              </tr>
+            </thead>
+            <tbody id="edit-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<div class="footer">
+  &copy; 2026 — Controle de Movimentos Contábeis — Sistema Interno
+</div>
+
+<script>
+// DADOS DAS EMPRESAS (SERÃO INJETADOS PELO PYTHON)
+let INITIAL_DATA = [];
+
+let COMPANIES = [];
+const MONTHS = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+let selectedMonth = MONTHS[new Date().getMonth()];
+const MONTH_MAP = {'JAN': 1, 'FEV': 2, 'MAR': 3, 'ABR': 4, 'MAI': 5, 'JUN': 6, 'JUL': 7, 'AGO': 8, 'SET': 9, 'OUT': 10, 'NOV': 11, 'DEZ': 12};
+
+let currentSort = {
+  view: null,
+  field: null,
+  asc: true
+};
+
+function sortTable(view, field) {
+  if (currentSort.view === view && currentSort.field === field) {
+    currentSort.asc = !currentSort.asc;
+  } else {
+    currentSort.view = view;
+    currentSort.field = field;
+    currentSort.asc = true;
+  }
+
+  // Atualizar classes visuais nos cabeçalhos
+  document.querySelectorAll('th').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+  });
+  
+  const eventTarget = event.currentTarget;
+  eventTarget.classList.add(currentSort.asc ? 'sort-asc' : 'sort-desc');
+
+  COMPANIES.sort((a, b) => {
+    let valA, valB;
+    
+    if (field === 'id') {
+      valA = parseInt(a.id);
+      valB = parseInt(b.id);
+    } else if (field === 'nome' || field === 'regime') {
+      valA = a[field].toLowerCase();
+      valB = b[field].toLowerCase();
+    } else if (field === 'okCount') {
+      valA = MONTHS.filter(m => isOk(a.meses[m])).length;
+      valB = MONTHS.filter(m => isOk(b.meses[m])).length;
+    } else if (field === 'status') {
+      valA = a.meses[selectedMonth] || '';
+      valB = b.meses[selectedMonth] || '';
+    } else if (field === 'openDate' || field === 'closeDate') {
+      valA = a[field] || '9999-12-31';
+      valB = b[field] || '9999-12-31';
+    } else if (MONTHS.includes(field)) {
+      valA = a.meses[field] || '';
+      valB = b.meses[field] || '';
+    }
+
+    if (valA < valB) return currentSort.asc ? -1 : 1;
+    if (valA > valB) return currentSort.asc ? 1 : -1;
+    return 0;
+  });
+
+  if (view === 'geral') filterGeralTable();
+  else if (view === 'mensal') filterMensalTable();
+  else if (view === 'edit') renderEditTable();
+}
+
+// LOAD E SAVE DATA
+const MASTER_COMPANIES_KEY = 'portfolio_contabil_empresas_v1';
+
+function getMasterCompanies() {
+  try {
+    const raw = localStorage.getItem(MASTER_COMPANIES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) { return []; }
+}
+
+/* Sincroniza a lista de empresas com o cadastro central (aba Portfólio):
+   adiciona empresas novas, remove as excluídas e atualiza nome/regime/datas,
+   preservando o histórico mensal (meses) já lançado para as que permanecem. */
+function syncWithMaster() {
+  const master = getMasterCompanies();
+  const masterIds = new Set(master.map(m => String(m.id)));
+
+  // Remove empresas que não existem mais no cadastro central (Portfólio)
+  COMPANIES = COMPANIES.filter(c => masterIds.has(String(c.id)));
+
+  // Atualiza dados cadastrais (nome, regime, datas) das empresas existentes
+  COMPANIES.forEach(c => {
+    c.meses = c.meses || {};
+    const m = master.find(mm => String(mm.id) === String(c.id));
+    if (m) {
+      c.nome = m.nome;
+      c.regime = m.regime;
+      c.openDate = m.openDate;
+      c.closeDate = m.closeDate || null;
+    }
+  });
+
+  // Adiciona empresas novas cadastradas no Portfólio
+  const existingIds = new Set(COMPANIES.map(c => String(c.id)));
+  master.forEach(m => {
+    if (!existingIds.has(String(m.id))) {
+      COMPANIES.push({
+        id: m.id,
+        nome: m.nome,
+        regime: m.regime,
+        openDate: m.openDate,
+        closeDate: m.closeDate || null,
+        meses: {}
+      });
+    }
+  });
+}
+
+function loadData() {
+  const saved = localStorage.getItem('contabil_data_2026');
+  if (saved) {
+    try { COMPANIES = JSON.parse(saved); } catch (e) { COMPANIES = []; }
+  } else {
+    COMPANIES = JSON.parse(JSON.stringify(INITIAL_DATA));
+  }
+  syncWithMaster();
+  saveData();
+  if (typeof authFilterCompaniesForSession === 'function') {
+    COMPANIES = authFilterCompaniesForSession(COMPANIES);
+  }
+}
+
+function saveData() {
+  applyDateBasedNA();
+  const dataToSave = typeof authMergeCompanyScopeForSave === 'function'
+    ? authMergeCompanyScopeForSave('contabil_data_2026', COMPANIES)
+    : COMPANIES;
+  localStorage.setItem('contabil_data_2026', JSON.stringify(dataToSave));
+}
+
+// Interpreta datas do cadastro central, aceitando tanto o formato completo
+// (AAAA-MM-DD) quanto o formato antigo (AAAA-MM), por compatibilidade.
+function parseMasterDate(v) {
+  if (!v) return null;
+  return /^\d{4}-\d{2}$/.test(v) ? new Date(v + '-01') : new Date(v);
+}
+function formatDateBR(v) {
+  if (!v) return null;
+  const parts = v.split('-');
+  if (parts.length === 3) { const [y, m, d] = parts; return `${d}/${m}/${y}`; }
+  if (parts.length === 2) { const [y, m] = parts; return `${m}/${y}`; }
+  return v;
+}
+
+// APLICAR LÓGICA DE N/A BASEADA EM DATAS
+function applyDateBasedNA() {
+  COMPANIES.forEach(company => {
+    const openDate = parseMasterDate(company.openDate);
+    const closeDate = parseMasterDate(company.closeDate);
+
+    MONTHS.forEach(month => {
+      const monthNum = MONTH_MAP[month];
+      const monthDate = new Date(2026, monthNum - 1, 1);
+
+      // Se a empresa ainda não foi aberta, marcar como N/A
+      if (openDate && monthDate < openDate) {
+        if (company.meses[month] !== 'N/A') {
+          company.meses[month] = 'N/A';
+        }
+      }
+      // Se a empresa foi inativada, marcar como N/A
+      else if (closeDate && monthDate >= closeDate) {
+        if (company.meses[month] !== 'N/A') {
+          company.meses[month] = 'N/A';
+        }
+      }
+    });
+  });
+}
+
+// HELPERS DE STATUS
+const isOk = (v) => v && v.startsWith('OK');
+const isSM = (v) => v === 'OK (S/M)';
+const isNA = (v) => v === 'N/A';
+const isPendente = (v) => !v || (v === 'PENDENTE' && !isNA(v));
+
+function isFutureMonth(month) {
+  const currentMonthIndex = new Date().getMonth();
+  const monthIndex = MONTHS.indexOf(month);
+  return monthIndex > currentMonthIndex;
+}
+
+function statusType(v, month) {
+  if (month && isFutureMonth(month)) return 'inapto';
+  if (isNA(v)) return 'na';
+  if (isSM(v)) return 'sm';
+  if (v === 'OK (Falta extrato)') return 'aviso';
+  if (v === 'OK (Drive)') return 'drive';
+  if (isOk(v)) return 'ok';
+  return 'pendente';
+}
+
+function badgeHTML(v, month) {
+  const t = statusType(v, month);
+  if (t === 'inapto') return '';
+  if (t === 'na') return `<span class="badge badge-na">⚪ N/A</span>`;
+  if (t === 'ok') return `<span class="badge badge-ok">✅ OK</span>`;
+  if (t === 'sm') return `<span class="badge badge-sm">📭 S/M</span>`;
+  if (t === 'drive') return `<span class="badge badge-drive">📁 Drive</span>`;
+  if (t === 'aviso') return `<span class="badge badge-extra">⚠ Falta extrato</span>`;
+  return `<span class="badge badge-pendente">⏳ Pendente</span>`;
+}
+
+function miniCell(v, month) {
+  const t = statusType(v, month);
+  let cls = 'mini-pendente';
+  if (t === 'inapto') cls = 'mini-na';
+  else if (t === 'na') cls = 'mini-na';
+  else if (t === 'ok') cls = 'mini-ok';
+  else if (t === 'sm') cls = 'mini-sm';
+  else if (t === 'drive') cls = 'mini-drive';
+  else if (t === 'aviso') cls = 'mini-extra';
+  return `<div class="mini-cell ${cls}" title="${t === 'inapto' ? 'INAPTO' : (v||'PENDENTE')}"></div>`;
+}
+
+// VIEWS
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobile-nav');
+  menu.classList.toggle('open');
+}
+function closeMobileMenu() {
+  document.getElementById('mobile-nav').classList.remove('open');
+  // Sincroniza item ativo no menu mobile
+  const mobileItems = document.querySelectorAll('.mobile-nav-item');
+  mobileItems.forEach(i => i.classList.remove('active'));
+}
+
+let currentView = 'geral';
+function switchView(view) {
+  currentView = view;
+  const contents = document.querySelectorAll('.view-content');
+  const tabs = document.querySelectorAll('.nav-tab');
+  const mobileItems = document.querySelectorAll('.mobile-nav-item');
+
+  contents.forEach(v => v.classList.remove('active'));
+  tabs.forEach(t => t.classList.remove('active'));
+  mobileItems.forEach(i => i.classList.remove('active'));
+
+  // Pequeno delay para CSS transition funcionar corretamente
+  requestAnimationFrame(() => {
+    const activeView = document.getElementById('view-' + view);
+    activeView.classList.add('active');
+  });
+
+  // Ativa aba desktop
+  const desktopTab = document.querySelector(`#desktop-nav [onclick="switchView('${view}')"]`);
+  if (desktopTab) desktopTab.classList.add('active');
+
+  // Ativa item mobile
+  const mobileItem = document.querySelector(`#mobile-nav [onclick*="switchView('${view}')"]`);
+  if (mobileItem) mobileItem.classList.add('active');
+  
+  if (view === 'geral') {
+    updateGeral();
+  } else if (view === 'mensal') {
+    updateMensal();
+  } else if (view === 'edit') {
+    populateEditCompanyList();
+    renderEditTable();
+  }
+}
+
+// ANIMAÇÕES DE CONTADOR
+function animateCounter(el, toVal, duration = 550) {
+  if (!el) return;
+  const fromVal = parseInt(el.textContent) || 0;
+  if (fromVal === toVal) return;
+  const start = performance.now();
+  function step(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(fromVal + (toVal - fromVal) * ease);
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+function animatePct(el, toPct, duration = 550) {
+  if (!el) return;
+  const fromPct = parseInt(el.textContent) || 0;
+  const start = performance.now();
+  function step(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(fromPct + (toPct - fromPct) * ease) + '%';
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// LOGICA GERAL
+function updateGeral() {
+  // O mês de referência para o dashboard geral deve ser o mês anterior ao atual,
+  // pois é o mês que as empresas estão fechando/enviando.
+  const now = new Date();
+  let refMonthIndex = now.getMonth() - 1;
+  if (refMonthIndex < 0) refMonthIndex = 0; // Se for Janeiro, mantém Janeiro
+  
+  const refMonth = MONTHS[refMonthIndex];
+  
+  let totalAtivasRef = 0;
+  let empresasComEnvio = 0;
+  let empresasSM = 0;
+  let empresasPendentesZero = 0;
+
+  COMPANIES.forEach(c => {
+    const vRef = c.meses[refMonth];
+    
+    // 1. Total de empresas ativas no mês de referência
+    if (!isNA(vRef)) {
+      totalAtivasRef++;
+    }
+
+    // 2. Empresas que enviaram ao menos 1 mês (OK) - Acumulado no ano
+    const temAlgumOK = MONTHS.some((m, idx) => {
+      if (idx > refMonthIndex) return false;
+      const v = c.meses[m];
+      return isOk(v) && !isSM(v);
+    });
+    if (temAlgumOK) empresasComEnvio++;
+
+    // 3. Empresas Sem Movimento (OK S/M) no mês de referência
+    if (isSM(vRef)) {
+      empresasSM++;
+    }
+
+    // 4. Empresas Pendentes (Nunca enviaram no ano até o mês de referência)
+    const nuncaEnviouNoAno = MONTHS.every((m, idx) => {
+      if (idx > refMonthIndex) return true;
+      const v = c.meses[m];
+      return isNA(v) || isPendente(v);
+    });
+    if (nuncaEnviouNoAno && !isNA(vRef)) {
+      empresasPendentesZero++;
+    }
+  });
+
+  animateCounter(document.getElementById('geral-total'), totalAtivasRef);
+  document.getElementById('geral-total-sub').textContent = `Ativas em ${refMonth}`;
+  animateCounter(document.getElementById('geral-envios-confirmados'), empresasComEnvio);
+  animateCounter(document.getElementById('geral-sm'), empresasSM);
+  animateCounter(document.getElementById('geral-pendentes-zero'), empresasPendentesZero);
+
+  buildRegimeChart();
+  buildBarChart();
+  filterGeralTable();
+}
+
+function buildRegimeChart() {
+  const regimes = {};
+  COMPANIES.forEach(c => {
+    const r = c.regime.trim();
+    regimes[r] = (regimes[r]||0) + 1;
+  });
+  const total = COMPANIES.length;
+  const colors = {'Simples Nacional':'#4f6ef7','Lucro Presumido':'#f59e0b','Lucro Real':'#22c55e'};
+  const container = document.getElementById('geral-regime-list');
+  container.innerHTML = '';
+  Object.entries(regimes).sort((a,b)=>b[1]-a[1]).forEach(([name, count]) => {
+    const pct = total > 0 ? Math.round((count/total)*100) : 0;
+    container.innerHTML += `
+      <div class="regime-item">
+        <div class="regime-header">
+          <span class="regime-name">${name}</span>
+          <span class="regime-count">${count} empresas (${pct}%)</span>
+        </div>
+        <div class="regime-bar-bg">
+          <div class="regime-bar-fill" style="width:${pct}%;background:${colors[name]||'#64748b'}"></div>
+        </div>
+      </div>`;
+  });
+}
+
+function buildBarChart() {
+  const container = document.getElementById('geral-bar-chart');
+  container.innerHTML = '';
+  const currentMonthIndex = new Date().getMonth();
+  const MAX_H = 110;
+
+  MONTHS.forEach((m, index) => {
+    if (index > currentMonthIndex) return;
+    const s = monthStats(m);
+    const total = s.ok + s.sm + s.pendente;
+    const okH  = total > 0 ? Math.max(2, Math.round(((s.ok + s.sm) / total) * MAX_H)) : 2;
+    const pendH = total > 0 ? Math.max(2, Math.round((s.pendente / total) * MAX_H)) : 2;
+    container.innerHTML += `
+      <div class="bar-group">
+        <div class="bar-wrap">
+          <div class="bar bar-ok" style="height:${okH}px" title="Enviados: ${s.ok + s.sm}"></div>
+          <div class="bar bar-pendente" style="height:${pendH}px" title="Pendente: ${s.pendente}"></div>
+        </div>
+        <div class="bar-label">${m}</div>
+      </div>`;
+  });
+}
+
+function filterGeralTable() {
+  const q = document.getElementById('geral-search').value.toLowerCase();
+  const regime = document.getElementById('geral-regime').value;
+  const tbody = document.getElementById('geral-table-body');
+  let count = 0;
+  let html = '';
+
+  COMPANIES.forEach(c => {
+    if (q && !c.nome.toLowerCase().includes(q) && !c.id.includes(q)) return;
+    if (regime && c.regime.trim() !== regime) return;
+
+    const okCount = MONTHS.filter(m => isOk(c.meses[m])).length;
+    const mini = MONTHS.map(m => miniCell(c.meses[m], m)).join('');
+    count++;
+    html += `<tr>
+      <td style="color:var(--text-muted)">#${c.id}</td>
+      <td class="nome" title="${c.nome}">${c.nome}</td>
+      <td style="color:var(--text-muted);font-size:11px">${c.regime}</td>
+      <td class="center"><div class="mini-months" style="justify-content:center">${mini}</div></td>
+      <td class="center" style="font-weight:700;color:${okCount>0?'var(--green)':'var(--text-muted)'}">${okCount}/12</td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = html;
+  document.getElementById('geral-table-count').textContent = `(${count} empresas)`;
+
+  const tableScroll = document.getElementById('geral-table-scroll');
+  const minigameCont = document.getElementById('minigame-container');
+  const tableControls = document.getElementById('geral-table-controls');
+  
+  if (!COMPANIES.some(c => !c.closeDate) && !(typeof authIsManager === 'function' && authIsManager())) {
+    tableScroll.style.display = 'none';
+    tableControls.style.display = 'none';
+    minigameCont.style.display = 'flex';
+    initGame();
+  } else {
+    tableScroll.style.display = 'block';
+    tableControls.style.display = 'flex';
+    minigameCont.style.display = 'none';
+    stopGame();
+  }
+}
+
+
+// LOGICA MENSAL
+function monthStats(month) {
+  let ok = 0, sm = 0, pendente = 0, na = 0;
+  COMPANIES.forEach(c => {
+    const v = c.meses[month];
+    if (isNA(v)) na++;
+    else if (isSM(v)) sm++;
+    else if (isOk(v)) ok++;
+    else pendente++;
+  });
+  return {ok, sm, pendente, na};
+}
+
+function buildMonthTabs() {
+  const container = document.getElementById('month-tabs');
+  container.innerHTML = '';
+  MONTHS.forEach(m => {
+    const btn = document.createElement('button');
+    const future = isFutureMonth(m);
+    btn.className = 'month-tab' + (m === selectedMonth ? ' active' : '');
+    if (future) {
+      btn.style.opacity = '0.5';
+      btn.textContent = m;
+    } else {
+      btn.textContent = m;
+    }
+    btn.onclick = () => {
+      selectedMonth = m;
+      document.querySelectorAll('.month-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      updateMensal();
+    };
+    container.appendChild(btn);
+  });
+}
+
+function updateMensal() {
+  const s = monthStats(selectedMonth);
+
+  animateCounter(document.getElementById('month-ok'), s.ok);
+  animateCounter(document.getElementById('month-sm'), s.sm);
+  animateCounter(document.getElementById('month-pendente'), s.pendente);
+
+  const totalAtivas = s.ok + s.sm + s.pendente;
+  animateCounter(document.getElementById('monthly-total-companies'), totalAtivas);
+  document.getElementById('mensal-table-count').textContent = `(${totalAtivas} empresas ativas)`;
+
+  const pct = totalAtivas > 0 ? Math.round(((s.ok + s.sm) / totalAtivas) * 100) : 0;
+  animatePct(document.getElementById('ring-pct'), pct);
+  document.getElementById('ring-label').textContent = `Taxa de envio em ${selectedMonth}`;
+
+  // Ring SVG — transição via CSS stroke-dashoffset
+  const circ = 2 * Math.PI * 50;
+  const offset = circ - (pct / 100) * circ;
+  document.getElementById('ring-progress').style.strokeDashoffset = offset;
+
+  filterMensalTable();
+}
+
+function filterMensalTable() {
+  const q = document.getElementById('mensal-search').value.toLowerCase();
+  const statusFilter = document.getElementById('mensal-status').value;
+  const tbody = document.getElementById('mensal-table-body');
+  let html = '';
+
+  COMPANIES.forEach(c => {
+    const monthVal = c.meses[selectedMonth];
+    const t = statusType(monthVal, selectedMonth);
+    
+    if (q && !c.nome.toLowerCase().includes(q) && !c.id.includes(q)) return;
+    if (statusFilter === 'ok' && !(isOk(monthVal) && !isSM(monthVal))) return;
+    if (statusFilter === 'pendente' && !isPendente(monthVal)) return;
+    if (statusFilter === 'sm' && !isSM(monthVal)) return;
+    if (statusFilter === 'na' && !isNA(monthVal)) return;
+
+    html += `<tr>
+      <td style="color:var(--text-muted)">#${c.id}</td>
+      <td class="nome" title="${c.nome}">${c.nome}</td>
+      <td class="center">${badgeHTML(monthVal, selectedMonth)}</td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = html;
+}
+
+// EDIT LOGIC — Busca por ID ou Nome
+function populateEditCompanyList() {
+  // Nada a fazer; agora a seleção é feita pelo campo de busca
+  // Mantemos para compatibilidade com switchView
+}
+
+function filterEditCompanyOptions() {
+  const q = document.getElementById('edit-search-input').value.trim().toLowerCase();
+  const resultsBox = document.getElementById('edit-search-results');
+
+  // Limpar seleção se o usuário editou o campo
+  document.getElementById('edit-company').value = '';
+  document.getElementById('edit-company-card').style.display = 'none';
+  document.getElementById('edit-current-status-wrap').style.display = 'none';
+
+  if (!q) { resultsBox.style.display = 'none'; return; }
+
+  const matches = COMPANIES.filter(c =>
+    c.id.includes(q) ||
+    c.nome.toLowerCase().includes(q)
+  ).slice(0, 12);
+
+  if (matches.length === 0) {
+    resultsBox.innerHTML = `<div style="padding:12px 14px;color:var(--text-muted);font-size:13px;">Nenhuma empresa encontrada.</div>`;
+    resultsBox.style.display = 'block';
+    return;
+  }
+
+  resultsBox.innerHTML = matches.map(c => `
+    <div class="edit-result-item" onclick="selectEditCompany('${c.id}')">
+      <span class="edit-result-id">#${c.id}</span>
+      <span class="edit-result-name">${c.nome}</span>
+      <span class="edit-result-regime">${c.regime}</span>
+    </div>
+  `).join('');
+  resultsBox.style.display = 'block';
+}
+
+function selectEditCompany(companyId) {
+  const company = COMPANIES.find(c => c.id === companyId);
+  if (!company) return;
+
+  // Fecha o dropdown
+  document.getElementById('edit-search-results').style.display = 'none';
+  // Preenche o campo de busca com o nome
+  document.getElementById('edit-search-input').value = `#${company.id} — ${company.nome}`;
+  // Armazena o ID
+  document.getElementById('edit-company').value = companyId;
+
+  // Mostra card da empresa
+  const card = document.getElementById('edit-company-card');
+  document.getElementById('edit-company-card-name').textContent = company.nome;
+  document.getElementById('edit-company-card-info').textContent = `${company.regime} · Abertura: ${formatDateBR(company.openDate) || 'N/A'}${company.closeDate ? ' · Inativação: ' + formatDateBR(company.closeDate) : ''}`;
+  document.getElementById('edit-company-card-id').textContent = `#${company.id}`;
+  card.style.display = 'block';
+
+  updateEditForm();
+}
+
+function clearEditSearch() {
+  document.getElementById('edit-search-input').value = '';
+  document.getElementById('edit-company').value = '';
+  document.getElementById('edit-search-results').style.display = 'none';
+  document.getElementById('edit-company-card').style.display = 'none';
+  document.getElementById('edit-current-status-wrap').style.display = 'none';
+  document.getElementById('edit-msg').textContent = '';
+}
+
+function updateEditForm() {
+  const companyId = document.getElementById('edit-company').value;
+  const month = document.getElementById('edit-month').value;
+  const msg = document.getElementById('edit-msg');
+  msg.textContent = '';
+
+  if (companyId && month) {
+    const company = COMPANIES.find(c => c.id === companyId);
+    if (company) {
+      const currentStatus = company.meses[month] || 'PENDENTE';
+
+      // Mostra status atual
+      const wrap = document.getElementById('edit-current-status-wrap');
+      const val = document.getElementById('edit-current-status-val');
+      wrap.style.display = 'block';
+      val.textContent = currentStatus;
+
+      const statusSelect = document.getElementById('edit-status');
+      let found = false;
+      for (let i = 0; i < statusSelect.options.length; i++) {
+        if (statusSelect.options[i].value === currentStatus) {
+          statusSelect.selectedIndex = i;
+          found = true;
+          break;
+        }
+      }
+      if (!found) statusSelect.value = 'OK';
+    }
+  }
+}
+
+function saveEdit() {
+  const companyId = document.getElementById('edit-company').value;
+  const month = document.getElementById('edit-month').value;
+  const status = document.getElementById('edit-status').value;
+  const msg = document.getElementById('edit-msg');
+
+  if (!companyId) {
+    msg.style.color = 'var(--red)';
+    msg.textContent = '❌ Por favor, selecione uma empresa pela busca acima.';
+    return;
+  }
+
+  const companyIndex = COMPANIES.findIndex(c => c.id === companyId);
+  if (companyIndex !== -1) {
+    COMPANIES[companyIndex].meses[month] = status;
+    saveData();
+    msg.style.color = 'var(--green)';
+    msg.textContent = `✅ ${COMPANIES[companyIndex].nome} — ${month} atualizado para ${status}!`;
+
+    // Atualiza o card com o novo status
+    document.getElementById('edit-current-status-val').textContent = status;
+
+    renderEditTable();
+    setTimeout(() => { msg.textContent = ''; }, 3500);
+  }
+}
+
+function renderEditTable() {
+  const q = document.getElementById('edit-table-search').value.toLowerCase();
+  const tbody = document.getElementById('edit-table-body');
+  let html = '';
+
+  COMPANIES.forEach(c => {
+    if (q && !c.nome.toLowerCase().includes(q) && !c.id.includes(q)) return;
+
+    let row = `<tr>
+      <td style="color:var(--text-muted)">#${c.id}</td>
+      <td class="nome" title="${c.nome}">${c.nome}</td>`;
+
+    MONTHS.forEach(m => {
+      const val = c.meses[m];
+      const t = statusType(val, m);
+      const isFuture = isFutureMonth(m);
+      
+      let cellCls = 'mini-cell';
+      if (t === 'inapto') cellCls += ' mini-na inapto';
+      else if (t === 'na') cellCls += ' mini-na';
+      else if (t === 'ok') cellCls += ' mini-ok';
+      else if (t === 'sm') cellCls += ' mini-sm';
+      else if (t === 'drive') cellCls += ' mini-drive';
+      else if (t === 'aviso') cellCls += ' mini-extra';
+      else cellCls += ' mini-pendente';
+
+      row += `
+        <td class="center">
+          <div class="edit-table-cell ${isFuture ? 'inapto' : ''}" 
+               onclick="${isFuture ? '' : `toggleStatus('${c.id}', '${m}')`}"
+               title="${isFuture ? '' : 'Clique para alterar'}">
+            <div class="${cellCls}"></div>
+          </div>
+        </td>`;
+    });
+
+    row += `</tr>`;
+    html += row;
+  });
+
+  tbody.innerHTML = html;
+}
+
+function toggleStatus(companyId, month) {
+  const company = COMPANIES.find(c => c.id === companyId);
+  if (!company) return;
+
+  const currentStatus = company.meses[month] || 'PENDENTE';
+  let nextStatus = 'OK';
+
+  if (currentStatus === 'PENDENTE') {
+    nextStatus = 'OK';
+  } else if (currentStatus === 'OK') {
+    nextStatus = 'OK (S/M)';
+  } else if (currentStatus === 'OK (S/M)') {
+    nextStatus = 'PENDENTE';
+  } else {
+    // Para outros status que possam existir (como Drive, Falta Extrato), volta para OK
+    nextStatus = 'OK';
+  }
+
+  company.meses[month] = nextStatus;
+  saveData();
+  renderEditTable();
+}
+
+// INIT
+window.onload = () => {
+  loadData();
+  buildMonthTabs();
+  switchView('geral');
+
+  // Fecha dropdown de busca ao clicar fora
+  document.addEventListener('click', (e) => {
+    const input = document.getElementById('edit-search-input');
+    const results = document.getElementById('edit-search-results');
+    if (results && input && !input.contains(e.target) && !results.contains(e.target)) {
+      results.style.display = 'none';
+    }
+  });
+};
+
+// Sincroniza automaticamente se o Portfólio for alterado em outra aba/janela do navegador
+window.addEventListener('storage', (e) => {
+  if (e.key === MASTER_COMPANIES_KEY) {
+    syncWithMaster();
+    saveData();
+    switchView(currentView);
+  }
+});
+
+// Sincroniza ao voltar para esta aba (ex: usuário editou o Portfólio e voltou)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    syncWithMaster();
+    saveData();
+    switchView(currentView);
+  }
+});
+</script>
+<script>authMountBadge(); authFadeIn();</script>
+</body>
+</html>
